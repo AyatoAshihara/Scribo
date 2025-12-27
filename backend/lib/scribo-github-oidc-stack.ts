@@ -26,8 +26,7 @@ export class ScriboGitHubOidcStack extends cdk.Stack {
             'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
           },
           StringLike: {
-            // あなたのGitHubリポジトリに変更してください
-            'token.actions.githubusercontent.com:sub': 'repo:aashi-ihsaa/Scribo:*',
+            'token.actions.githubusercontent.com:sub': 'repo:AyatoAshihara/Scribo:*',
           },
         },
         'sts:AssumeRoleWithWebIdentity'
