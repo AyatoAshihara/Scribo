@@ -1,0 +1,31 @@
+﻿{
+    "Items": [
+        {
+            "s3_uri": {
+                "S": "s3://scribo-essay-evaluator/ST/is_essay.json"
+            },
+            "year_term": {
+                "S": "令和3年度春期"
+            },
+            "question_id": {
+                "S": "問1"
+            },
+            "SK": {
+                "S": "YEAR#2021SPRING#ESSAY#Q1"
+            },
+            "PK": {
+                "S": "EXAM#IS"
+            },
+            "exam_type": {
+                "S": "ITストラテジスト"
+            },
+            "title": {
+                "S": "デジタルトランスフォーメーションを実現するための新サービスの企画について"
+            }
+        }
+    ],
+    "Count": 10,
+    "ScannedCount": 10,
+    "ConsumedCapacity": null,
+    "NextToken": "eyJFeGNsdXNpdmVTdGFydEtleSI6IG51bGwsICJib3RvX3RydW5jYXRlX2Ftb3VudCI6IDF9"
+}
