@@ -7,6 +7,7 @@ import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import * as s3 from 'aws-cdk-lib/aws-s3';
 
 export interface ScriboFargateStackProps extends cdk.StackProps {
   repository: ecr.IRepository;
@@ -29,6 +30,9 @@ export class ScriboFargateStack extends cdk.Stack {
     // 既存DynamoDBテーブルをインポート
     const examTable = dynamodb.Table.fromTableName(this, 'ExamTable', 'scribo-ipa');
     const submissionTable = dynamodb.Table.fromTableName(this, 'SubmissionTable', 'SubmissionTable');
+    
+    // 既存S3バケットをインポート（問題データ格納）
+    const essayBucket = s3.Bucket.fromBucketName(this, 'EssayBucket', 'scribo-essay-evaluator');
 
     // ==========================================================================
     // 2. VPC
@@ -77,6 +81,9 @@ export class ScriboFargateStack extends cdk.Stack {
     // DynamoDB アクセス権限
     examTable.grantReadData(taskDefinition.taskRole);
     submissionTable.grantReadWriteData(taskDefinition.taskRole);
+
+    // S3 アクセス権限（問題データ読み取り）
+    essayBucket.grantRead(taskDefinition.taskRole);
 
     // Bedrock アクセス権限
     taskDefinition.taskRole.addToPrincipalPolicy(new iam.PolicyStatement({
