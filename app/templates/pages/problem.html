@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block timer %}
+<!-- タイマーコンポーネント（Alpine.js） -->
+<div x-data="examTimer({{ 120 }})" x-init="init()" class="flex items-center gap-2">
+    <template x-if="!isRunning && remainingSeconds === totalSeconds">
+        <button @click="start()" class="btn btn-sm btn-accent">
+            ⏱️ タイマー開始
+        </button>
+    </template>
+    
+    <template x-if="isRunning || remainingSeconds < totalSeconds">
+        <div class="flex items-center gap-2">
+            <div 
+                class="badge badge-lg font-mono text-lg"
+                :class="{
+                    'badge-error animate-pulse': remainingSeconds <= 300,
+                    'badge-warning': remainingSeconds > 300 && remainingSeconds <= 600,
+                    'badge-info': remainingSeconds > 600
+                }">
+                <span x-text="formatTime(remainingSeconds)"></span>
+            </div>
+            <button 
+                @click="toggle()" 
+                class="btn btn-sm btn-ghost"
+                x-text="isRunning ? '⏸️' : '▶️'">
+            </button>
+            <button @click="reset()" class="btn btn-sm btn-ghost">🔄</button>
+        </div>
+    </template>
+</div>
+{% endblock %}
+
+{% block content %}
+<div 
+    x-data="problemViewer('{{ exam_type }}', '{{ problem_id }}')" 
+    x-init="init()"
+    class="h-[calc(100vh-12rem)]">
+    
+    <!-- ローディング状態 -->
+    <template x-if="loading">
+        <div class="flex justify-center items-center h-full">
+            <span class="loading loading-spinner loading-lg text-primary"></span>
+        </div>
+    </template>
+    
+    <!-- エラー状態 -->
+    <template x-if="error">
+        <div class="alert alert-error">
+            <span x-text="error"></span>
+            <a href="/" class="btn btn-sm">一覧に戻る</a>
+        </div>
+    </template>
+    
+    <!-- メインコンテンツ -->
+    <template x-if="!loading && !error && problem">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
+            <!-- 左カラム: 問題文 -->
+            <div class="card bg-base-100 shadow-lg overflow-hidden">
+                <div class="card-body p-0 h-full flex flex-col">
+                    <div class="p-4 border-b bg-base-200">
+                        <h2 class="card-title text-lg" x-text="problem.title"></h2>
+                        <p class="text-sm text-base-content/70" x-text="problem.year_term"></p>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-4">
+                        <div class="prose prose-sm max-w-none" x-html="formatContent(problem.problem_content)"></div>
+                        
+                        <!-- 設問一覧 -->
+                        <div class="divider">設問</div>
+                        <template x-for="(content, key) in problem.problem_question" :key="key">
+                            <div class="mb-4 p-3 bg-base-200 rounded-lg">
+                                <h4 class="font-bold" x-text="key"></h4>
+                                <p class="text-sm mt-1" x-text="content"></p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右カラム: 回答入力 -->
+            <div class="card bg-base-100 shadow-lg overflow-hidden">
+                <div class="card-body p-0 h-full flex flex-col">
+                    <!-- タブ -->
+                    <div class="tabs tabs-bordered bg-base-200 p-2">
+                        <template x-for="(_, key) in answers" :key="key">
+                            <button 
+                                @click="activeTab = key"
+                                :class="activeTab === key ? 'tab tab-active' : 'tab'"
+                                class="tab gap-2">
+                                <span x-text="key"></span>
+                                <span 
+                                    class="badge badge-sm"
+                                    :class="getWordCountBadgeClass(key)"
+                                    x-text="getWordCount(key) + '字'">
+                                </span>
+                            </button>
+                        </template>
+                    </div>
+                    
+                    <!-- 回答入力エリア -->
+                    <div class="flex-1 p-4 flex flex-col">
+                        <template x-for="(_, key) in answers" :key="key">
+                            <div x-show="activeTab === key" class="flex-1 flex flex-col">
+                                <!-- 文字数ガイド -->
+                                <div class="flex justify-between items-center mb-2 text-sm">
+                                    <span class="text-base-content/70">
+                                        目安: <span x-text="getWordLimit(key)"></span>
+                                    </span>
+                                    <span 
+                                        :class="getWordCountBadgeClass(key)"
+                                        class="font-mono">
+                                        <span x-text="getWordCount(key)"></span> 文字
+                                    </span>
+                                </div>
+                                
+                                <!-- テキストエリア -->
+                                <textarea 
+                                    x-model="answers[key]"
+                                    @input="saveToLocalStorage()"
+                                    class="textarea textarea-bordered flex-1 w-full resize-none font-mono text-sm leading-relaxed"
+                                    :placeholder="key + 'の回答を入力してください...'">
+                                </textarea>
+                            </div>
+                        </template>
+                    </div>
+                    
+                    <!-- 送信ボタン -->
+                    <div class="p-4 border-t bg-base-200">
+                        <button 
+                            @click="submitAnswer()"
+                            :disabled="submitting"
+                            class="btn btn-primary w-full">
+                            <template x-if="submitting">
+                                <span class="loading loading-spinner loading-sm"></span>
+                            </template>
+                            <span x-text="submitting ? '送信中...' : '回答を送信して採点'"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+</div>
+
+<!-- 時間切れダイアログ -->
+<dialog id="timeup-dialog" class="modal">
+    <div class="modal-box">
+        <h3 class="font-bold text-lg">⏰ 制限時間終了</h3>
+        <p class="py-4">試験時間が終了しました。回答を送信しますか？</p>
+        <div class="modal-action">
+            <button class="btn" onclick="document.getElementById('timeup-dialog').close()">
+                続ける
+            </button>
+            <button class="btn btn-primary" onclick="Alpine.store('problem').submitAnswer()">
+                送信する
+            </button>
+        </div>
+    </div>
+</dialog>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/timer.js"></script>
+<script src="/static/js/problem.js"></script>
+{% endblock %}

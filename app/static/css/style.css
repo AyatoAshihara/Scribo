@@ -1,0 +1,95 @@
+/* Scribo カスタムスタイル */
+
+/* htmx インジケーター */
+.htmx-indicator {
+    display: none;
+}
+.htmx-request .htmx-indicator {
+    display: flex;
+}
+.htmx-request.htmx-indicator {
+    display: flex;
+}
+
+/* 問題文の整形 */
+.prose h3 {
+    @apply text-lg font-bold mt-4 mb-2;
+}
+.prose p {
+    @apply mb-3 leading-relaxed;
+}
+.prose ul, .prose ol {
+    @apply ml-4 mb-3;
+}
+.prose li {
+    @apply mb-1;
+}
+
+/* テキストエリアのカスタマイズ */
+textarea {
+    min-height: 300px;
+}
+
+/* タイマーアニメーション */
+@keyframes pulse-warning {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+.timer-warning {
+    animation: pulse-warning 1s ease-in-out infinite;
+}
+
+/* カードホバーエフェクト */
+.card:hover {
+    transform: translateY(-2px);
+    transition: transform 0.2s ease-in-out;
+}
+
+/* レスポンシブ調整 */
+@media (max-width: 1024px) {
+    .grid-cols-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* スクロールバーのカスタマイズ */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: oklch(var(--b2));
+}
+::-webkit-scrollbar-thumb {
+    background: oklch(var(--bc) / 0.3);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: oklch(var(--bc) / 0.5);
+}
+
+/* プログレスバーの色 */
+.progress-success {
+    --progress-color: oklch(var(--su));
+}
+.progress-warning {
+    --progress-color: oklch(var(--wa));
+}
+.progress-error {
+    --progress-color: oklch(var(--er));
+}
+
+/* ラジアルプログレスの色 */
+.text-success {
+    color: oklch(var(--su));
+}
+.text-warning {
+    color: oklch(var(--wa));
+}
+.text-error {
+    color: oklch(var(--er));
+}

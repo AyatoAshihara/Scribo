@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6">試験一覧</h1>
+    
+    <!-- 試験区分タブ -->
+    <div x-data="{ activeTab: 'IS' }" class="mb-6">
+        <div class="tabs tabs-boxed bg-base-100 p-1">
+            <button 
+                @click="activeTab = 'IS'; $refs.examList.setAttribute('hx-get', '/api/exams/partial/list?exam_type=IS'); htmx.trigger($refs.examList, 'load')"
+                :class="activeTab === 'IS' ? 'tab tab-active' : 'tab'"
+                class="tab">
+                ITストラテジスト
+            </button>
+            <button 
+                @click="activeTab = 'PM'; $refs.examList.setAttribute('hx-get', '/api/exams/partial/list?exam_type=PM'); htmx.trigger($refs.examList, 'load')"
+                :class="activeTab === 'PM' ? 'tab tab-active' : 'tab'"
+                class="tab">
+                プロジェクトマネージャ
+            </button>
+            <button 
+                @click="activeTab = 'SA'; $refs.examList.setAttribute('hx-get', '/api/exams/partial/list?exam_type=SA'); htmx.trigger($refs.examList, 'load')"
+                :class="activeTab === 'SA' ? 'tab tab-active' : 'tab'"
+                class="tab">
+                システムアーキテクト
+            </button>
+        </div>
+        
+        <!-- 試験一覧（htmxで動的読み込み） -->
+        <div 
+            x-ref="examList"
+            id="exam-list"
+            class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6"
+            hx-get="/api/exams/partial/list?exam_type=IS"
+            hx-trigger="load"
+            hx-indicator="#loading-indicator">
+            <!-- htmxで読み込まれる -->
+        </div>
+        
+        <!-- ローディングインジケーター -->
+        <div id="loading-indicator" class="htmx-indicator flex justify-center py-8">
+            <span class="loading loading-spinner loading-lg text-primary"></span>
+        </div>
+    </div>
+</div>
+{% endblock %}

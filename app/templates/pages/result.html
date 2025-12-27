@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div 
+    x-data="scoringResult('{{ submission_id }}')" 
+    x-init="init()"
+    class="max-w-4xl mx-auto">
+    
+    <!-- ローディング状態 -->
+    <template x-if="loading">
+        <div class="flex flex-col justify-center items-center py-20">
+            <span class="loading loading-spinner loading-lg text-primary mb-4"></span>
+            <p class="text-base-content/70">採点結果を取得中...</p>
+        </div>
+    </template>
+    
+    <!-- エラー状態 -->
+    <template x-if="error">
+        <div class="alert alert-error">
+            <span x-text="error"></span>
+            <a href="/" class="btn btn-sm">一覧に戻る</a>
+        </div>
+    </template>
+    
+    <!-- 採点結果 -->
+    <template x-if="!loading && !error && result">
+        <div class="space-y-6">
+            <!-- ヘッダー -->
+            <div class="text-center">
+                <h1 class="text-3xl font-bold mb-2">採点結果</h1>
+                <p class="text-base-content/70" x-text="'提出ID: ' + submission_id"></p>
+            </div>
+            
+            <!-- 総合スコアカード -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body items-center text-center">
+                    <div 
+                        class="radial-progress text-6xl font-bold"
+                        :class="getRankColor(result.final_rank)"
+                        :style="'--value:' + result.aggregate_score + '; --size: 12rem; --thickness: 1rem;'"
+                        role="progressbar">
+                        <span x-text="result.final_rank"></span>
+                    </div>
+                    <h2 class="card-title mt-4">
+                        総合スコア: <span x-text="result.aggregate_score.toFixed(1)"></span>点
+                    </h2>
+                    <div 
+                        class="badge badge-lg"
+                        :class="result.passed ? 'badge-success' : 'badge-warning'">
+                        <span x-text="result.passed ? '✅ 合格ライン達成' : '📚 さらなる学習が必要'"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 設問別評価 -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h3 class="card-title">設問別評価</h3>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="table table-zebra">
+                            <thead>
+                                <tr>
+                                    <th>設問</th>
+                                    <th>ランク</th>
+                                    <th>スコア</th>
+                                    <th>文字数</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="(breakdown, question) in result.question_breakdown" :key="question">
+                                    <tr>
+                                        <td x-text="question"></td>
+                                        <td>
+                                            <span 
+                                                class="badge"
+                                                :class="getRankColor(breakdown.level)"
+                                                x-text="breakdown.level">
+                                            </span>
+                                        </td>
+                                        <td x-text="breakdown.question_score + '点'"></td>
+                                        <td x-text="breakdown.word_count + '字'"></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 観点別評価 -->
+            <template x-for="(breakdown, question) in result.question_breakdown" :key="question">
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h3 class="card-title" x-text="question + 'の詳細評価'"></h3>
+                        
+                        <div class="space-y-3">
+                            <template x-for="score in breakdown.criteria_scores" :key="score.criterion">
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-sm font-medium" x-text="score.criterion"></span>
+                                        <span class="text-sm" x-text="score.points + '点'"></span>
+                                    </div>
+                                    <progress 
+                                        class="progress w-full"
+                                        :class="getProgressColor(score.points)"
+                                        :value="score.points" 
+                                        max="100">
+                                    </progress>
+                                    <template x-if="score.comment">
+                                        <p class="text-xs text-base-content/70 mt-1" x-text="score.comment"></p>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </template>
+            
+            <!-- 戻るボタン -->
+            <div class="flex justify-center gap-4">
+                <a href="/" class="btn btn-outline">試験一覧に戻る</a>
+            </div>
+        </div>
+    </template>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/result.js"></script>
+{% endblock %}

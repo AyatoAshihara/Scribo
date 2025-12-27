@@ -1,0 +1,18 @@
+# Scribo ローカル開発環境
+# docker-compose up で起動
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - AWS_REGION=ap-northeast-1
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - DYNAMODB_EXAM_TABLE=scribo-ipa
+      - DYNAMODB_SUBMISSION_TABLE=SubmissionTable
+      - BEDROCK_MODEL_ID=anthropic.claude-3-5-sonnet-20240620-v1:0
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload

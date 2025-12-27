@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ title }} | Scribo{% endblock %}</title>
+    
+    <!-- Tailwind CSS + DaisyUI -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- htmx -->
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <script src="https://unpkg.com/htmx-ext-sse@2.2.2/sse.js"></script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
+    
+    <!-- カスタムスタイル -->
+    <link rel="stylesheet" href="/static/css/style.css">
+    
+    {% block head %}{% endblock %}
+</head>
+<body class="min-h-screen bg-base-200">
+    <!-- ヘッダー -->
+    <header class="navbar bg-primary text-primary-content shadow-lg sticky top-0 z-50">
+        <div class="flex-1">
+            <a href="/" class="btn btn-ghost text-xl font-bold">
+                📝 Scribo
+            </a>
+        </div>
+        <div class="flex-none gap-2">
+            <!-- タイマースロット -->
+            <div id="timer-slot">
+                {% block timer %}{% endblock %}
+            </div>
+        </div>
+    </header>
+    
+    <!-- メインコンテンツ -->
+    <main class="container mx-auto px-4 py-6">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- フッター -->
+    <footer class="footer footer-center p-4 bg-base-300 text-base-content">
+        <aside>
+            <p>Scribo - IPA午後Ⅱ論述式試験 学習支援アプリ</p>
+        </aside>
+    </footer>
+    
+    <!-- カスタムスクリプト -->
+    <script src="/static/js/app.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

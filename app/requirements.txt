@@ -1,0 +1,30 @@
+# FastAPI + htmx プロジェクト依存関係
+# Scribo - IPA午後Ⅱ論述式試験学習支援アプリ
+
+# Web フレームワーク
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+
+# テンプレートエンジン
+jinja2==3.1.4
+
+# AWS SDK
+boto3==1.35.86
+
+# フォームデータ処理
+python-multipart==0.0.18
+
+# 環境変数管理
+python-dotenv==1.0.1
+
+# Pydantic (FastAPIの依存)
+pydantic==2.10.4
+pydantic-settings==2.7.0
+
+# SSE (Server-Sent Events) サポート
+sse-starlette==2.2.1
+
+# 開発用
+httpx==0.28.1
+pytest==8.3.4
+pytest-asyncio==0.25.0
