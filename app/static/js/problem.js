@@ -87,6 +87,43 @@ function problemViewer(examType, problemId) {
             }
         },
         
+        // 設問が完了しているか（文字数範囲内）
+        isQuestionComplete(question) {
+            const count = this.getWordCount(question);
+            const limit = this.wordLimits[question];
+            if (!limit) return false;
+            return count >= limit.min && count <= limit.max;
+        },
+        
+        // 完了した設問数を取得
+        getCompletedCount() {
+            return ['設問ア', '設問イ', '設問ウ'].filter(q => this.isQuestionComplete(q)).length;
+        },
+        
+        // 目標までの残り文字数
+        getRemainingWords(question) {
+            const count = this.getWordCount(question);
+            const limit = this.wordLimits[question];
+            if (!limit) return 0;
+            return Math.max(0, limit.min - count);
+        },
+        
+        // 文字数オーバーかどうか
+        isOverLimit(question) {
+            const count = this.getWordCount(question);
+            const limit = this.wordLimits[question];
+            if (!limit) return false;
+            return count > limit.max;
+        },
+        
+        // オーバーした文字数
+        getOverWords(question) {
+            const count = this.getWordCount(question);
+            const limit = this.wordLimits[question];
+            if (!limit) return 0;
+            return Math.max(0, count - limit.max);
+        },
+        
         formatContent(content) {
             if (!content) return '';
             // 改行をbrに変換

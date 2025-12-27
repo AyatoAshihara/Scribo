@@ -1,16 +1,53 @@
 {% extends "base.html" %}
 
+{% block head %}
+<!-- 紙吹雪エフェクト用 -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+{% endblock %}
+
 {% block content %}
 <div 
     x-data="scoringResult('{{ submission_id }}')" 
     x-init="init()"
     class="max-w-4xl mx-auto">
     
-    <!-- ローディング状態 -->
+    <!-- ローディング状態（労働の錯覚） -->
     <template x-if="loading">
-        <div class="flex flex-col justify-center items-center py-20">
-            <span class="loading loading-spinner loading-lg text-primary mb-4"></span>
-            <p class="text-base-content/70">採点結果を取得中...</p>
+        <div class="flex flex-col justify-center items-center py-16">
+            <!-- ステップ表示 -->
+            <ul class="steps steps-vertical lg:steps-horizontal mb-8">
+                <li class="step" :class="loadingStep >= 1 ? 'step-primary' : ''">
+                    <span class="text-sm">回答受信</span>
+                </li>
+                <li class="step" :class="loadingStep >= 2 ? 'step-primary' : ''">
+                    <span class="text-sm">文章構成分析</span>
+                </li>
+                <li class="step" :class="loadingStep >= 3 ? 'step-primary' : ''">
+                    <span class="text-sm">8観点評価</span>
+                </li>
+                <li class="step" :class="loadingStep >= 4 ? 'step-primary' : ''">
+                    <span class="text-sm">スコア計算</span>
+                </li>
+            </ul>
+            
+            <!-- プログレスバー -->
+            <div class="w-64 mb-4">
+                <progress 
+                    class="progress progress-primary w-full" 
+                    :value="loadingProgress" 
+                    max="100">
+                </progress>
+            </div>
+            
+            <!-- ステップメッセージ -->
+            <p class="text-base-content/70 text-center" x-text="loadingMessage"></p>
+            
+            <!-- 豆知識 -->
+            <div class="mt-8 p-4 bg-base-100 rounded-lg max-w-md">
+                <p class="text-sm text-base-content/60">
+                    💡 <span x-text="currentTip"></span>
+                </p>
+            </div>
         </div>
     </template>
     
@@ -31,29 +68,63 @@
                 <p class="text-base-content/70" x-text="'提出ID: ' + submission_id"></p>
             </div>
             
-            <!-- 総合スコアカード -->
+            <!-- 総合スコアカード（段階的開示） -->
             <div class="card bg-base-100 shadow-xl">
                 <div class="card-body items-center text-center">
+                    <!-- ランク表示（アニメーション付き） -->
                     <div 
-                        class="radial-progress text-6xl font-bold"
-                        :class="getRankColor(result.final_rank)"
-                        :style="'--value:' + result.aggregate_score + '; --size: 12rem; --thickness: 1rem;'"
-                        role="progressbar">
-                        <span x-text="result.final_rank"></span>
+                        class="radial-progress text-6xl font-bold transition-all duration-1000"
+                        :class="getRankColorClass(result.final_rank)"
+                        :style="'--value:' + (showDetails ? result.aggregate_score : 0) + '; --size: 12rem; --thickness: 1rem;'"
+                        role="progressbar"
+                        x-init="setTimeout(() => showDetails = true, 500)">
+                        <span 
+                            x-text="result.final_rank"
+                            class="animate-bounce"
+                            x-show="showDetails"
+                            x-transition:enter="transition ease-out duration-500"
+                            x-transition:enter-start="opacity-0 scale-50"
+                            x-transition:enter-end="opacity-100 scale-100"></span>
                     </div>
-                    <h2 class="card-title mt-4">
+                    
+                    <h2 class="card-title mt-4" x-show="showDetails" x-transition>
                         総合スコア: <span x-text="result.aggregate_score.toFixed(1)"></span>点
                     </h2>
-                    <div 
-                        class="badge badge-lg"
-                        :class="result.passed ? 'badge-success' : 'badge-warning'">
-                        <span x-text="result.passed ? '✅ 合格ライン達成' : '📚 さらなる学習が必要'"></span>
-                    </div>
+                    
+                    <!-- 合格/不合格メッセージ -->
+                    <template x-if="result.passed">
+                        <div class="space-y-2" x-show="showDetails" x-transition>
+                            <div class="badge badge-success badge-lg gap-2 p-4">
+                                🎉 合格ライン達成！おめでとうございます！
+                            </div>
+                            <p class="text-success font-medium">あなたの努力が実を結びました！</p>
+                        </div>
+                    </template>
+                    
+                    <template x-if="!result.passed">
+                        <div class="space-y-2" x-show="showDetails" x-transition>
+                            <div class="badge badge-info badge-lg gap-2 p-4">
+                                📚 もう少しで合格ラインです！
+                            </div>
+                            <p class="text-info font-medium">
+                                あと <span x-text="getPointsToPass()" class="font-bold"></span> 点で合格ライン！
+                                <br>次回はきっと達成できます💪
+                            </p>
+                        </div>
+                    </template>
+                    
+                    <!-- 詳細表示ボタン -->
+                    <button 
+                        @click="showDetailedResult = !showDetailedResult"
+                        class="btn btn-outline btn-sm mt-4"
+                        x-show="showDetails">
+                        <span x-text="showDetailedResult ? '詳細を隠す ▲' : '詳細を見る ▼'"></span>
+                    </button>
                 </div>
             </div>
             
             <!-- 設問別評価 -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card bg-base-100 shadow-xl" x-show="showDetailedResult" x-transition>
                 <div class="card-body">
                     <h3 class="card-title">設問別評価</h3>
                     
@@ -74,7 +145,7 @@
                                         <td>
                                             <span 
                                                 class="badge"
-                                                :class="getRankColor(breakdown.level)"
+                                                :class="getRankColorClass(breakdown.level)"
                                                 x-text="breakdown.level">
                                             </span>
                                         </td>
@@ -90,7 +161,7 @@
             
             <!-- 観点別評価 -->
             <template x-for="(breakdown, question) in result.question_breakdown" :key="question">
-                <div class="card bg-base-100 shadow-xl">
+                <div class="card bg-base-100 shadow-xl" x-show="showDetailedResult" x-transition>
                     <div class="card-body">
                         <h3 class="card-title" x-text="question + 'の詳細評価'"></h3>
                         
@@ -117,9 +188,20 @@
                 </div>
             </template>
             
+            <!-- 励ましメッセージ -->
+            <div class="card bg-gradient-to-r from-primary/10 to-secondary/10 shadow-xl" x-show="showDetails" x-transition>
+                <div class="card-body text-center">
+                    <h3 class="card-title justify-center">🌟 今日の一言</h3>
+                    <p class="text-lg" x-text="getEncouragementMessage()"></p>
+                </div>
+            </div>
+            
             <!-- 戻るボタン -->
             <div class="flex justify-center gap-4">
                 <a href="/" class="btn btn-outline">試験一覧に戻る</a>
+                <button @click="retryExam()" class="btn btn-primary">
+                    🔄 もう一度挑戦する
+                </button>
             </div>
         </div>
     </template>
