@@ -1,6 +1,7 @@
 """
 試験データ API ルーター
 既存DynamoDB (scribo-ipa) から試験一覧・問題詳細を取得
+S3から問題本文を取得
 """
 
 from fastapi import APIRouter, HTTPException, Query
@@ -8,15 +9,20 @@ from fastapi.responses import HTMLResponse
 from typing import Optional
 import boto3
 from boto3.dynamodb.conditions import Key
+import json
 
 from config import get_settings
 
 router = APIRouter()
 settings = get_settings()
 
-# DynamoDB クライアント
+# AWS クライアント
 dynamodb = boto3.resource("dynamodb", region_name=settings.aws_region)
 exam_table = dynamodb.Table(settings.dynamodb_exam_table)
+s3_client = boto3.client("s3", region_name=settings.aws_region)
+
+# S3問題データのキャッシュ（アプリ起動中のみ）
+_s3_problem_cache: dict = {}
 
 
 @router.get("")
@@ -67,12 +73,13 @@ async def get_problem_detail(
     
     Args:
         exam_type: 試験区分
-        problem_id: 問題ID
+        problem_id: 問題ID (例: YEAR#2025SPRING#ESSAY#Q1)
     
     Returns:
         問題詳細データ
     """
     try:
+        # DynamoDBからメタデータを取得
         response = exam_table.get_item(
             Key={
                 "PK": f"EXAM#{exam_type}",
@@ -84,16 +91,61 @@ async def get_problem_detail(
         if not item:
             raise HTTPException(status_code=404, detail="問題が見つかりません")
         
+        # S3 URIから問題本文を取得
+        s3_uri = item.get("s3_uri", "")
+        problem_content = ""
+        problem_question = {}
+        word_count_limits = {}
+        
+        if s3_uri:
+            # S3 URIをパース (例: s3://scribo-essay-evaluator/ST/is_essay.json)
+            s3_parts = s3_uri.replace("s3://", "").split("/", 1)
+            if len(s3_parts) == 2:
+                bucket_name = s3_parts[0]
+                object_key = s3_parts[1]
+                
+                # キャッシュを確認
+                cache_key = f"{bucket_name}/{object_key}"
+                if cache_key not in _s3_problem_cache:
+                    try:
+                        s3_response = s3_client.get_object(Bucket=bucket_name, Key=object_key)
+                        s3_data = json.loads(s3_response["Body"].read().decode("utf-8"))
+                        _s3_problem_cache[cache_key] = s3_data
+                    except Exception as e:
+                        print(f"S3からのデータ取得エラー: {e}")
+                        _s3_problem_cache[cache_key] = []
+                
+                s3_problems = _s3_problem_cache.get(cache_key, [])
+                
+                # DynamoDBのSKをS3のquestion_idに変換
+                # SK: YEAR#2025SPRING#ESSAY#Q1 → S3 question_id: IS#YEAR#2025SPRING#ESSAY#Q1
+                s3_question_id = f"{exam_type}#{problem_id}"
+                
+                # 該当する問題を検索
+                for problem in s3_problems:
+                    if problem.get("question_id") == s3_question_id:
+                        problem_content = problem.get("problemContent", "")
+                        problem_question = problem.get("problemQuestion", {})
+                        break
+        
+        # 文字数制限のデフォルト値
+        if not word_count_limits:
+            word_count_limits = {
+                "設問ア": {"min": 600, "max": 800},
+                "設問イ": {"min": 700, "max": 1000},
+                "設問ウ": {"min": 600, "max": 800}
+            }
+        
         # 問題データを整形
         problem_data = {
             "exam_type": exam_type,
             "problem_id": problem_id,
             "title": item.get("title", ""),
             "year_term": item.get("year_term", ""),
-            "problem_content": item.get("problem_content", ""),
-            "problem_question": item.get("problem_question", {}),
+            "problem_content": problem_content,
+            "problem_question": problem_question,
             "time_limit_minutes": item.get("time_limit_minutes", 120),
-            "word_count_limits": item.get("word_count_limits", {}),
+            "word_count_limits": word_count_limits,
         }
         
         return problem_data
