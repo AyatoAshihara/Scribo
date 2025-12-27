@@ -1,28 +1,300 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <h1 class="text-3xl font-bold mb-6">試験一覧</h1>
+<div class="max-w-5xl mx-auto" x-data="indexPage()" x-init="init()">
+    
+    <!-- ウェルカムモーダル（初回ユーザー向け） -->
+    <dialog id="welcome-modal" class="modal" :class="{ 'modal-open': showWelcome }">
+        <div class="modal-box max-w-2xl rounded-2xl">
+            <h3 class="font-bold text-2xl mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">👋 Scriboへようこそ！</h3>
+            
+            <!-- ステップ表示 -->
+            <div class="mb-6">
+                <ul class="steps steps-vertical lg:steps-horizontal w-full">
+                    <li class="step" :class="welcomeStep >= 1 ? 'step-primary' : ''">
+                        <span class="text-xs">アプリ紹介</span>
+                    </li>
+                    <li class="step" :class="welcomeStep >= 2 ? 'step-primary' : ''">
+                        <span class="text-xs">学習の流れ</span>
+                    </li>
+                    <li class="step" :class="welcomeStep >= 3 ? 'step-primary' : ''">
+                        <span class="text-xs">効果的な使い方</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- ステップ1: アプリ紹介 -->
+            <template x-if="welcomeStep === 1">
+                <div class="space-y-4" x-transition>
+                    <div class="alert-soft-info">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span><strong>Scribo</strong>は、IPA午後Ⅱ論述式試験の学習を支援するアプリです。</span>
+                    </div>
+                    <div class="grid gap-3">
+                        <div class="flex items-start gap-3">
+                            <span class="text-2xl">📝</span>
+                            <div>
+                                <p class="font-semibold">過去問を使った実践練習</p>
+                                <p class="text-sm text-base-content/70">実際の試験と同じ形式で回答を作成できます</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-2xl">🤖</span>
+                            <div>
+                                <p class="font-semibold">AIによる8観点での評価</p>
+                                <p class="text-sm text-base-content/70">あなたの回答をAIが詳細に分析・採点します</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-2xl">📊</span>
+                            <div>
+                                <p class="font-semibold">具体的な改善アドバイス</p>
+                                <p class="text-sm text-base-content/70">合格に向けた具体的なフィードバックを提供します</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+            
+            <!-- ステップ2: 学習の流れ -->
+            <template x-if="welcomeStep === 2">
+                <div class="space-y-4" x-transition>
+                    <p class="text-base-content/80">3ステップで効率的に学習できます：</p>
+                    <div class="space-y-3">
+                        <div class="card bg-primary/10 border-l-4 border-primary rounded-xl">
+                            <div class="card-body py-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="badge-soft-primary badge-lg px-3 py-2 font-bold">1</div>
+                                    <div>
+                                        <p class="font-semibold">問題を選ぶ</p>
+                                        <p class="text-sm text-base-content/70">試験区分と年度を選択して問題を開始</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card bg-secondary/10 border-l-4 border-secondary rounded-xl">
+                            <div class="card-body py-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="badge-soft-secondary badge-lg px-3 py-2 font-bold">2</div>
+                                    <div>
+                                        <p class="font-semibold">回答を作成</p>
+                                        <p class="text-sm text-base-content/70">120分のタイマーで本番さながらの練習</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card bg-accent/10 border-l-4 border-accent rounded-xl">
+                            <div class="card-body py-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="badge-soft-accent badge-lg px-3 py-2 font-bold">3</div>
+                                    <div>
+                                        <p class="font-semibold">採点結果を確認</p>
+                                        <p class="text-sm text-base-content/70">AIが8観点で詳細に評価・アドバイス</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+            
+            <!-- ステップ3: 効果的な使い方 -->
+            <template x-if="welcomeStep === 3">
+                <div class="space-y-4" x-transition>
+                    <p class="text-base-content/80">合格に近づくためのコツ：</p>
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3 p-4 bg-base-200/50 rounded-xl border border-base-200 transition-all hover:shadow-sm">
+                            <span class="text-xl">💡</span>
+                            <div>
+                                <p class="font-semibold">まずは時間を気にせず</p>
+                                <p class="text-sm text-base-content/70">最初は文字数と論理構成に集中。慣れてきたらタイマーを使いましょう</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3 p-4 bg-base-200/50 rounded-xl border border-base-200 transition-all hover:shadow-sm">
+                            <span class="text-xl">🔄</span>
+                            <div>
+                                <p class="font-semibold">繰り返し練習が鍵</p>
+                                <p class="text-sm text-base-content/70">同じ問題でも、フィードバックを活かして再挑戦すると効果的です</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3 p-4 bg-base-200/50 rounded-xl border border-base-200 transition-all hover:shadow-sm">
+                            <span class="text-xl">📈</span>
+                            <div>
+                                <p class="font-semibold">採点結果を分析</p>
+                                <p class="text-sm text-base-content/70">8観点のどこが弱いかを把握し、重点的に強化しましょう</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+            
+            <div class="modal-action">
+                <button 
+                    x-show="welcomeStep > 1" 
+                    @click="welcomeStep--" 
+                    class="btn btn-ghost rounded-xl">
+                    ← 戻る
+                </button>
+                <template x-if="welcomeStep < 3">
+                    <button @click="welcomeStep++" class="btn-gradient">
+                        次へ →
+                    </button>
+                </template>
+                <template x-if="welcomeStep === 3">
+                    <button @click="closeWelcome()" class="btn-gradient">
+                        🚀 始めましょう！
+                    </button>
+                </template>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button @click="closeWelcome()">close</button>
+        </form>
+    </dialog>
+
+    <!-- ヒーローセクション -->
+    <div class="hero bg-gradient-hero rounded-2xl mb-8 border border-base-200/50 relative overflow-hidden">
+        <!-- 背景パターン -->
+        <div class="absolute inset-0 opacity-30">
+            <div class="absolute top-10 left-10 w-32 h-32 bg-primary/20 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-10 right-10 w-40 h-40 bg-secondary/20 rounded-full blur-3xl"></div>
+        </div>
+        <div class="hero-content text-center py-10 relative z-10">
+            <div class="max-w-2xl">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4 text-gradient">📝 Scribo</h1>
+                <p class="text-lg text-base-content/80 mb-4">
+                    IPA午後Ⅱ論述式試験の学習支援アプリ
+                </p>
+                <p class="text-base-content/60">
+                    AIが8観点であなたの回答を評価し、合格に向けた具体的なアドバイスを提供します
+                </p>
+                
+                <!-- クイックスタートボタン -->
+                <div class="flex flex-wrap justify-center gap-3 mt-8">
+                    <button @click="showWelcome = true; welcomeStep = 1" class="btn btn-outline rounded-xl gap-2 hover:bg-base-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+                        </svg>
+                        使い方を見る
+                    </button>
+                    <a href="#exam-section" class="btn-gradient gap-2">
+                        問題を選んで開始
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 学習フローガイド -->
+    <div class="card-modern mb-8">
+        <div class="card-body">
+            <h2 class="card-title text-lg mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-primary">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                学習の流れ
+            </h2>
+            <ul class="steps steps-horizontal w-full">
+                <li class="step step-primary" data-content="1">
+                    <div class="text-xs mt-2">
+                        <span class="font-semibold block">問題を選ぶ</span>
+                        <span class="text-base-content/60 hidden sm:block">試験区分・年度</span>
+                    </div>
+                </li>
+                <li class="step" data-content="2">
+                    <div class="text-xs mt-2">
+                        <span class="font-semibold block">回答を作成</span>
+                        <span class="text-base-content/60 hidden sm:block">120分タイマー</span>
+                    </div>
+                </li>
+                <li class="step" data-content="3">
+                    <div class="text-xs mt-2">
+                        <span class="font-semibold block">AI採点</span>
+                        <span class="text-base-content/60 hidden sm:block">8観点評価</span>
+                    </div>
+                </li>
+                <li class="step" data-content="✓">
+                    <div class="text-xs mt-2">
+                        <span class="font-semibold block">復習・改善</span>
+                        <span class="text-base-content/60 hidden sm:block">再挑戦</span>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 学習統計セクション（学習履歴がある場合のみ表示） -->
+    <template x-if="hasLearningHistory">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="stat bg-base-100 rounded-2xl border border-base-200 shadow-sm hover:shadow-md transition-shadow">
+                <div class="stat-figure text-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                </div>
+                <div class="stat-title text-xs">総学習回数</div>
+                <div class="stat-value text-2xl" x-text="stats.totalAttempts"></div>
+            </div>
+            
+            <div class="stat bg-base-100 rounded-2xl border border-base-200 shadow-sm hover:shadow-md transition-shadow">
+                <div class="stat-figure text-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </div>
+                <div class="stat-title text-xs">最高スコア</div>
+                <div class="stat-value text-2xl" x-text="stats.bestScore + '点'"></div>
+            </div>
+            
+            <div class="stat bg-base-100 rounded-2xl border border-base-200 shadow-sm hover:shadow-md transition-shadow">
+                <div class="stat-figure text-accent">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <div class="stat-title text-xs">合格率</div>
+                <div class="stat-value text-2xl" x-text="stats.passRate + '%'"></div>
+            </div>
+            
+            <div class="stat bg-base-100 rounded-2xl border border-base-200 shadow-sm hover:shadow-md transition-shadow">
+                <div class="stat-figure text-warning">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <div class="stat-title text-xs">連続学習</div>
+                <div class="stat-value text-2xl" x-text="stats.streak + '日'"></div>
+            </div>
+        </div>
+    </template>
+    
+    <!-- 初回ユーザー向けヒント -->
+    <template x-if="!hasLearningHistory">
+        <div class="alert-soft-info mb-8">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <div>
+                <span class="font-semibold">初めての方へ</span>
+                <span class="text-sm"> 下の試験区分タブから問題を選んで、論述式試験の練習を始めましょう！</span>
+            </div>
+        </div>
+    </template>
+
+    <h2 id="exam-section" class="text-2xl font-bold mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">試験一覧</h2>
     
     <!-- 試験区分タブ -->
     <div x-data="{ activeTab: 'IS' }" class="mb-6">
-        <div class="tabs tabs-boxed bg-base-100 p-1">
+        <div class="tabs tabs-boxed bg-base-100 p-1.5 rounded-xl border border-base-200">
             <button 
                 @click="activeTab = 'IS'; $refs.examList.setAttribute('hx-get', '/api/exams/partial/list?exam_type=IS'); htmx.trigger($refs.examList, 'load')"
-                :class="activeTab === 'IS' ? 'tab tab-active' : 'tab'"
-                class="tab">
+                :class="activeTab === 'IS' ? 'tab tab-active bg-primary text-white rounded-lg' : 'tab rounded-lg hover:bg-base-200'"
+                class="tab transition-all">
                 ITストラテジスト
             </button>
             <button 
                 @click="activeTab = 'PM'; $refs.examList.setAttribute('hx-get', '/api/exams/partial/list?exam_type=PM'); htmx.trigger($refs.examList, 'load')"
-                :class="activeTab === 'PM' ? 'tab tab-active' : 'tab'"
-                class="tab">
+                :class="activeTab === 'PM' ? 'tab tab-active bg-primary text-white rounded-lg' : 'tab rounded-lg hover:bg-base-200'"
+                class="tab transition-all">
                 プロジェクトマネージャ
             </button>
             <button 
                 @click="activeTab = 'SA'; $refs.examList.setAttribute('hx-get', '/api/exams/partial/list?exam_type=SA'); htmx.trigger($refs.examList, 'load')"
-                :class="activeTab === 'SA' ? 'tab tab-active' : 'tab'"
-                class="tab">
+                :class="activeTab === 'SA' ? 'tab tab-active bg-primary text-white rounded-lg' : 'tab rounded-lg hover:bg-base-200'"
+                class="tab transition-all">
                 システムアーキテクト
             </button>
         </div>
@@ -44,4 +316,92 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+/**
+ * インデックスページコンポーネント
+ */
+function indexPage() {
+    return {
+        showWelcome: false,
+        welcomeStep: 1,
+        hasLearningHistory: false,
+        stats: {
+            totalAttempts: 0,
+            bestScore: 0,
+            passRate: 0,
+            streak: 0
+        },
+        
+        init() {
+            // 初回訪問チェック
+            const hasVisited = storage.get('scribo_visited');
+            if (!hasVisited) {
+                this.showWelcome = true;
+            }
+            
+            // 学習履歴を読み込み
+            this.loadLearningHistory();
+        },
+        
+        closeWelcome() {
+            this.showWelcome = false;
+            storage.set('scribo_visited', true);
+        },
+        
+        loadLearningHistory() {
+            const history = storage.get('scribo_learning_history') || [];
+            if (history.length > 0) {
+                this.hasLearningHistory = true;
+                this.calculateStats(history);
+            }
+        },
+        
+        calculateStats(history) {
+            this.stats.totalAttempts = history.length;
+            
+            // 最高スコア
+            const scores = history.map(h => h.score || 0);
+            this.stats.bestScore = Math.max(...scores, 0);
+            
+            // 合格率
+            const passed = history.filter(h => h.passed).length;
+            this.stats.passRate = history.length > 0 
+                ? Math.round((passed / history.length) * 100) 
+                : 0;
+            
+            // 連続学習日数
+            this.stats.streak = this.calculateStreak(history);
+        },
+        
+        calculateStreak(history) {
+            if (history.length === 0) return 0;
+            
+            const dates = history
+                .map(h => new Date(h.date).toDateString())
+                .filter((v, i, a) => a.indexOf(v) === i)
+                .sort((a, b) => new Date(b) - new Date(a));
+            
+            let streak = 0;
+            let currentDate = new Date();
+            
+            for (const dateStr of dates) {
+                const date = new Date(dateStr);
+                const diff = Math.floor((currentDate - date) / (1000 * 60 * 60 * 24));
+                
+                if (diff <= 1) {
+                    streak++;
+                    currentDate = date;
+                } else {
+                    break;
+                }
+            }
+            
+            return streak;
+        }
+    }
+}
+</script>
 {% endblock %}

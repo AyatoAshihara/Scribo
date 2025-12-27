@@ -43,7 +43,7 @@
             <p class="text-base-content/70 text-center" x-text="loadingMessage"></p>
             
             <!-- 豆知識 -->
-            <div class="mt-8 p-4 bg-base-100 rounded-lg max-w-md">
+            <div class="mt-8 p-4 bg-base-100 rounded-2xl border border-base-200 shadow-sm max-w-md">
                 <p class="text-sm text-base-content/60">
                     💡 <span x-text="currentTip"></span>
                 </p>
@@ -53,9 +53,9 @@
     
     <!-- エラー状態 -->
     <template x-if="error">
-        <div class="alert alert-error">
+        <div class="alert-soft-error">
             <span x-text="error"></span>
-            <a href="/" class="btn btn-sm">一覧に戻る</a>
+            <a href="/" class="btn btn-sm rounded-xl">一覧に戻る</a>
         </div>
     </template>
     
@@ -64,12 +64,12 @@
         <div class="space-y-6">
             <!-- ヘッダー -->
             <div class="text-center">
-                <h1 class="text-3xl font-bold mb-2">採点結果</h1>
-                <p class="text-base-content/70" x-text="'提出ID: ' + submission_id"></p>
+                <h1 class="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">採点結果</h1>
+                <p class="text-base-content/70" x-text="'提出id: ' + submission_id"></p>
             </div>
             
             <!-- 総合スコアカード（段階的開示） -->
-            <div class="card bg-base-100 shadow-xl">
+            <div class="card-modern">
                 <div class="card-body items-center text-center">
                     <!-- ランク表示（アニメーション付き） -->
                     <div 
@@ -94,7 +94,7 @@
                     <!-- 合格/不合格メッセージ -->
                     <template x-if="result.passed">
                         <div class="space-y-2" x-show="showDetails" x-transition>
-                            <div class="badge badge-success badge-lg gap-2 p-4">
+                            <div class="badge-soft-success text-base gap-2 px-6 py-3">
                                 🎉 合格ライン達成！おめでとうございます！
                             </div>
                             <p class="text-success font-medium">あなたの努力が実を結びました！</p>
@@ -103,7 +103,7 @@
                     
                     <template x-if="!result.passed">
                         <div class="space-y-2" x-show="showDetails" x-transition>
-                            <div class="badge badge-info badge-lg gap-2 p-4">
+                            <div class="badge-soft-info text-base gap-2 px-6 py-3">
                                 📚 もう少しで合格ラインです！
                             </div>
                             <p class="text-info font-medium">
@@ -116,7 +116,7 @@
                     <!-- 詳細表示ボタン -->
                     <button 
                         @click="showDetailedResult = !showDetailedResult"
-                        class="btn btn-outline btn-sm mt-4"
+                        class="btn btn-outline rounded-xl btn-sm mt-4"
                         x-show="showDetails">
                         <span x-text="showDetailedResult ? '詳細を隠す ▲' : '詳細を見る ▼'"></span>
                     </button>
@@ -124,7 +124,7 @@
             </div>
             
             <!-- 設問別評価 -->
-            <div class="card bg-base-100 shadow-xl" x-show="showDetailedResult" x-transition>
+            <div class="card-modern" x-show="showDetailedResult" x-transition>
                 <div class="card-body">
                     <h3 class="card-title">設問別評価</h3>
                     
@@ -161,7 +161,7 @@
             
             <!-- 観点別評価 -->
             <template x-for="(breakdown, question) in result.question_breakdown" :key="question">
-                <div class="card bg-base-100 shadow-xl" x-show="showDetailedResult" x-transition>
+                <div class="card-modern" x-show="showDetailedResult" x-transition>
                     <div class="card-body">
                         <h3 class="card-title" x-text="question + 'の詳細評価'"></h3>
                         
@@ -189,17 +189,52 @@
             </template>
             
             <!-- 励ましメッセージ -->
-            <div class="card bg-gradient-to-r from-primary/10 to-secondary/10 shadow-xl" x-show="showDetails" x-transition>
+            <div class="card bg-gradient-hero rounded-2xl border border-base-200/50" x-show="showDetails" x-transition>
                 <div class="card-body text-center">
                     <h3 class="card-title justify-center">🌟 今日の一言</h3>
                     <p class="text-lg" x-text="getEncouragementMessage()"></p>
                 </div>
             </div>
             
+            <!-- 次のステップガイド -->
+            <div class="card-modern" x-show="showDetails" x-transition>
+                <div class="card-body">
+                    <h3 class="card-title text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-primary">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                        </svg>
+                        次のステップ
+                    </h3>
+                    <div class="grid gap-3 md:grid-cols-3">
+                        <div class="flex items-start gap-2 p-4 bg-base-200/50 rounded-xl border border-base-200 transition-all hover:shadow-sm">
+                            <span class="text-lg">📊</span>
+                            <div>
+                                <p class="font-semibold text-sm">評価を分析</p>
+                                <p class="text-xs text-base-content/70">8観点で低かった項目を確認</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-2 p-4 bg-base-200/50 rounded-xl border border-base-200 transition-all hover:shadow-sm">
+                            <span class="text-lg">✍️</span>
+                            <div>
+                                <p class="font-semibold text-sm">弱点を補強</p>
+                                <p class="text-xs text-base-content/70">フィードバックを参考に改善</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-2 p-4 bg-base-200/50 rounded-xl border border-base-200 transition-all hover:shadow-sm">
+                            <span class="text-lg">🔄</span>
+                            <div>
+                                <p class="font-semibold text-sm">再挑戦</p>
+                                <p class="text-xs text-base-content/70">同じ問題で実力を確認</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- 戻るボタン -->
             <div class="flex justify-center gap-4">
-                <a href="/" class="btn btn-outline">試験一覧に戻る</a>
-                <button @click="retryExam()" class="btn btn-primary">
+                <a href="/" class="btn btn-outline rounded-xl">試験一覧に戻る</a>
+                <button @click="retryExam()" class="btn-gradient">
                     🔄 もう一度挑戦する
                 </button>
             </div>

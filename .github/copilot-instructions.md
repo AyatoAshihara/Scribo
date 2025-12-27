@@ -40,12 +40,30 @@ docs/                       # ドキュメント群
 
 | 作業内容 | 参照ドキュメント | 概要 |
 |---------|----------------|------|
-| **UI/UX変更・新規画面** | `docs/ux-design-guidelines.md` | 心理学的原則、ゲーミフィケーション |
+| **UIデザイン・スタイリング** | `docs/ui-design-guidelines.md` | カラー、タイポグラフィ、コンポーネント |
+| **UX設計・インタラクション** | `docs/ux-design-guidelines.md` | 心理学的原則、ゲーミフィケーション |
 | **APIエンドポイント追加・変更** | `docs/API_SPECIFICATION.md` | Request/Response仕様、エラー処理 |
 | **採点ロジック変更** | `docs/SCORING_API.md` | 8観点評価、ランク判定基準 |
 | **インフラ・AWS変更** | `docs/ARCHITECTURE.md` | システム構成図、DynamoDBスキーマ |
 | **デプロイ・CI/CD** | `docs/DEPLOYMENT_GUIDE.md` | GitHub Actions、ロールバック手順 |
 | **プロジェクト全体把握** | `docs/APPLICATION_OVERVIEW.md` | 技術スタック、機能一覧 |
+
+### ⚠️ UI変更時の必読ガイドライン
+
+**UIデザインを変更する場合は、必ず以下のドキュメントを参照してください：**
+
+1. **`docs/ui-design-guidelines.md`** - 視覚デザインの指針
+   - カラーシステム（ブランドカラー、セマンティックカラー）
+   - タイポグラフィ（フォント、サイズ、ウェイト）
+   - コンポーネントスタイル（カード、ボタン、入力、バッジ等）
+   - アニメーション・トランジション
+   - ダークモード対応
+   - アイコン（Heroicons推奨、絵文字は装飾用途のみ）
+
+2. **`docs/ux-design-guidelines.md`** - ユーザー体験の指針
+   - 認知負荷の最小化
+   - 段階的開示
+   - フィードバックパターン
 
 ---
 
@@ -66,8 +84,17 @@ docs/                       # ドキュメント群
 
 ### DaisyUI
 ```html
-<button class="btn btn-primary">送信</button>
-<div class="card bg-base-100 shadow-xl">...</div>
+<!-- カスタムテーマ使用 -->
+<html data-theme="scribo">
+
+<!-- モダンカード -->
+<div class="card bg-base-100 border border-base-200 rounded-2xl shadow-sm">...</div>
+
+<!-- グラデーションボタン -->
+<button class="btn bg-gradient-to-r from-primary to-secondary text-white border-0 rounded-xl">送信</button>
+
+<!-- ガラスモーフィズムヘッダー -->
+<header class="navbar bg-base-100/80 backdrop-blur-xl border-b border-base-200/50">...</header>
 ```
 
 ---

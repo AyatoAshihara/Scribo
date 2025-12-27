@@ -83,6 +83,9 @@ function scoringResult(submissionId) {
                 await new Promise(r => setTimeout(r, 500));
                 this.loading = false;
                 
+                // 学習履歴を保存
+                this.saveLearningHistory();
+                
                 // 合格時は紙吹雪を表示
                 if (this.result.passed) {
                     setTimeout(() => this.triggerConfetti(), 800);
@@ -110,6 +113,39 @@ function scoringResult(submissionId) {
                     origin: { x: 0.9, y: 0.6 }
                 });
             }
+        },
+        
+        // 学習履歴を保存
+        saveLearningHistory() {
+            if (!this.result) return;
+            
+            const historyKey = 'scribo_learning_history';
+            const history = storage.get(historyKey) || [];
+            
+            // 重複チェック（同じsubmission_idは保存しない）
+            if (history.some(h => h.submission_id === this.submission_id)) {
+                return;
+            }
+            
+            // 新しい履歴を追加
+            const newEntry = {
+                submission_id: this.submission_id,
+                date: new Date().toISOString(),
+                score: this.result.aggregate_score,
+                rank: this.result.final_rank,
+                passed: this.result.passed,
+                exam_type: this.result.exam_type || '',
+                problem_id: this.result.problem_id || ''
+            };
+            
+            history.push(newEntry);
+            
+            // 最大100件まで保持（古いものを削除）
+            if (history.length > 100) {
+                history.shift();
+            }
+            
+            storage.set(historyKey, history);
         },
         
         // ランク別カラークラス

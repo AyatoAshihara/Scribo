@@ -193,9 +193,9 @@ async def get_exams_partial(exam_type: str = Query(default="IS")):
             encoded_problem_id = quote(exam["problem_id"], safe="")
             html_content += f'''
             <a href="/exam/{exam["exam_type"]}/{encoded_problem_id}" 
-               class="card bg-base-100 shadow-md hover:shadow-lg transition-shadow cursor-pointer">
-                <div class="card-body">
-                    <h3 class="card-title text-base">{exam["title"]}</h3>
+               class="card-modern card-interactive block">
+                <div class="card-body p-5">
+                    <h3 class="card-title text-base font-semibold text-base-content">{exam["title"]}</h3>
                     <p class="text-sm text-base-content/70">{exam["year_term"]}</p>
                 </div>
             </a>
