@@ -126,8 +126,15 @@ function problemViewer(examType, problemId) {
         
         formatContent(content) {
             if (!content) return '';
-            // 改行をbrに変換
-            return content
+            // XSS対策: HTMLエスケープ
+            const escaped = content
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+            // エスケープ後に改行を変換
+            return escaped
                 .replace(/\n\n/g, '</p><p>')
                 .replace(/\n/g, '<br>')
                 .replace(/^/, '<p>')

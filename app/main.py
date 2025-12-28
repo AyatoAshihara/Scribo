@@ -9,11 +9,45 @@ from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
+from starlette.middleware.base import BaseHTTPMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from config import get_settings
 from routers import exams, answers, scoring
 
 settings = get_settings()
+
+# レート制限設定
+limiter = Limiter(key_func=get_remote_address)
+
+
+# =============================================================================
+# セキュリティヘッダーミドルウェア
+# =============================================================================
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """XSS、クリックジャッキング等を防ぐセキュリティヘッダーを追加"""
+    
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        # XSS対策
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        # リファラー情報漏洩防止
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        # CSP（CDNからのスクリプト読み込みを許可）
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdn.tailwindcss.com https://unpkg.com; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
+            "font-src 'self' https://fonts.gstatic.com; "
+            "img-src 'self' data:; "
+            "connect-src 'self';"
+        )
+        return response
+
 
 # FastAPIアプリケーション初期化
 app = FastAPI(
@@ -21,6 +55,13 @@ app = FastAPI(
     description=settings.app_description,
     version="2.0.0",
 )
+
+# レート制限ハンドラー登録
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# セキュリティヘッダーミドルウェア追加
+app.add_middleware(SecurityHeadersMiddleware)
 
 # 静的ファイル（CSS, JS）
 app.mount("/static", StaticFiles(directory="static"), name="static")

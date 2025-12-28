@@ -4,10 +4,11 @@ DynamoDB (SubmissionTable) に回答を保存
 """
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import Dict, Optional
+from pydantic import BaseModel, field_validator, Field
+from typing import Dict, Optional, Literal
 from datetime import datetime
 import uuid
+import re
 import boto3
 
 from config import get_settings
@@ -22,10 +23,30 @@ submission_table = dynamodb.Table(settings.dynamodb_submission_table)
 
 class AnswerSubmission(BaseModel):
     """回答送信リクエスト"""
-    exam_type: str
-    problem_id: str
+    exam_type: Literal["IS", "PM", "SA", "ST"] = Field(..., description="試験区分")
+    problem_id: str = Field(..., min_length=1, max_length=100, description="問題ID")
     answers: Dict[str, str]  # {"設問ア": "...", "設問イ": "...", "設問ウ": "..."}
     metadata: Optional[Dict] = None
+    
+    @field_validator('problem_id')
+    @classmethod
+    def validate_problem_id(cls, v: str) -> str:
+        """問題IDの形式を検証"""
+        if not re.match(r'^YEAR#\d{4}(SPRING|FALL)#ESSAY#Q\d$', v):
+            raise ValueError('問題IDの形式が不正です')
+        return v
+    
+    @field_validator('answers')
+    @classmethod
+    def validate_answers(cls, v: Dict[str, str]) -> Dict[str, str]:
+        """回答の検証（キーと文字数制限）"""
+        allowed_keys = {'設問ア', '設問イ', '設問ウ'}
+        for key, value in v.items():
+            if key not in allowed_keys:
+                raise ValueError(f'無効な設問キー: {key}')
+            if len(value) > 5000:
+                raise ValueError(f'{key}の文字数が上限(5000文字)を超えています')
+        return v
 
 
 class AnswerResponse(BaseModel):

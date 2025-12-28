@@ -1,0 +1,95 @@
+# Scribo E2E テストワークフロー
+# 本番AWS環境を使用した統合テスト（手動実行）
+#
+# ⚠️ 注意事項:
+# - 本番DynamoDBとBedrockを使用します
+# - Bedrockの呼び出しコストが発生します
+# - 重要なリリース前に実行することを推奨
+
+name: E2E Tests
+
+on:
+  # 手動実行のみ
+  workflow_dispatch:
+    inputs:
+      skip_scoring_test:
+        description: '採点E2Eテストをスキップ（Bedrockコスト削減）'
+        required: false
+        default: 'false'
+        type: boolean
+      test_marker:
+        description: '実行するテストマーカー（e2e, e2e_scoring, e2e_answers）'
+        required: false
+        default: 'e2e'
+        type: string
+
+env:
+  AWS_REGION: ap-northeast-1
+
+jobs:
+  e2e-test:
+    name: E2E Tests (Production AWS)
+    runs-on: ubuntu-latest
+    
+    # OIDC認証でAWSにアクセス
+    permissions:
+      id-token: write
+      contents: read
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::058264261094:role/github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        working-directory: ./app
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run E2E tests (Answers only)
+        if: ${{ inputs.skip_scoring_test == 'true' }}
+        working-directory: ./app
+        run: |
+          pytest tests/e2e -v -m e2e_answers --tb=short
+        env:
+          AWS_REGION: ap-northeast-1
+          DYNAMODB_EXAM_TABLE: scribo-ipa
+          DYNAMODB_SUBMISSION_TABLE: SubmissionTable
+          BEDROCK_MODEL_ID: anthropic.claude-3-5-sonnet-20240620-v1:0
+
+      - name: Run E2E tests (Full)
+        if: ${{ inputs.skip_scoring_test != 'true' }}
+        working-directory: ./app
+        run: |
+          pytest tests/e2e -v -m ${{ inputs.test_marker }} --tb=short
+        env:
+          AWS_REGION: ap-northeast-1
+          DYNAMODB_EXAM_TABLE: scribo-ipa
+          DYNAMODB_SUBMISSION_TABLE: SubmissionTable
+          BEDROCK_MODEL_ID: anthropic.claude-3-5-sonnet-20240620-v1:0
+
+      - name: E2E Test Summary
+        if: always()
+        run: |
+          echo "## 🔬 E2E Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Configuration" >> $GITHUB_STEP_SUMMARY
+          echo "- **Test Marker:** ${{ inputs.test_marker }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Skip Scoring:** ${{ inputs.skip_scoring_test }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **AWS Region:** ${{ env.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### AWS Resources Used" >> $GITHUB_STEP_SUMMARY
+          echo "- DynamoDB: scribo-ipa, SubmissionTable" >> $GITHUB_STEP_SUMMARY
+          echo "- Bedrock: Claude 3.5 Sonnet" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ **注意:** E2Eテストは本番AWSリソースを使用しています" >> $GITHUB_STEP_SUMMARY

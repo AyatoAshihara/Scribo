@@ -24,7 +24,12 @@ pydantic-settings==2.7.0
 # SSE (Server-Sent Events) サポート
 sse-starlette==2.2.1
 
-# 開発用
+# レート制限
+slowapi==0.1.9
+
+# テスト・開発用
 httpx==0.28.1
 pytest==8.3.4
 pytest-asyncio==0.25.0
+pytest-cov==6.0.0
+pytest-env==1.1.5

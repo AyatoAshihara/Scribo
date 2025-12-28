@@ -3,18 +3,27 @@ AI採点 API ルーター
 Amazon Bedrock (Claude) で論文を採点
 """
 
-from fastapi import APIRouter, HTTPException
+import logging
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Dict, Optional, List
 from datetime import datetime
 import json
 import boto3
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from config import get_settings
 
+# ロガー設定
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
 settings = get_settings()
+
+# レート制限
+limiter = Limiter(key_func=get_remote_address)
 
 # AWS クライアント
 dynamodb = boto3.resource("dynamodb", region_name=settings.aws_region)
@@ -92,12 +101,14 @@ JSON形式で以下の構造で出力してください：
 
 
 @router.post("", response_model=ScoringResponse)
-async def score_submission(request: ScoringRequest):
+@limiter.limit("5/minute")  # 1分間に5回まで（Bedrockコスト保護）
+async def score_submission(request: Request, scoring_request: ScoringRequest):
     """
     回答を採点
     
     Args:
-        request: 採点リクエスト（submission_id）
+        request: FastAPI Request（レート制限用）
+        scoring_request: 採点リクエスト（submission_id）
     
     Returns:
         採点結果
@@ -106,7 +117,7 @@ async def score_submission(request: ScoringRequest):
         # 回答を取得
         response = submission_table.get_item(
             Key={
-                "PK": f"SUBMISSION#{request.submission_id}",
+                "PK": f"SUBMISSION#{scoring_request.submission_id}",
                 "SK": "ANSWER"
             }
         )
@@ -156,9 +167,9 @@ async def score_submission(request: ScoringRequest):
         
         # 結果をDynamoDBに保存
         result_item = {
-            "PK": f"SUBMISSION#{request.submission_id}",
+            "PK": f"SUBMISSION#{scoring_request.submission_id}",
             "SK": "SCORING",
-            "submission_id": request.submission_id,
+            "submission_id": scoring_request.submission_id,
             "aggregate_score": scoring_result.get("aggregate_score", 0),
             "final_rank": scoring_result.get("final_rank", "D"),
             "passed": scoring_result.get("final_rank", "D") == "A",
@@ -168,7 +179,7 @@ async def score_submission(request: ScoringRequest):
         submission_table.put_item(Item=result_item)
         
         return ScoringResponse(
-            submission_id=request.submission_id,
+            submission_id=scoring_request.submission_id,
             aggregate_score=scoring_result.get("aggregate_score", 0),
             final_rank=scoring_result.get("final_rank", "D"),
             passed=scoring_result.get("final_rank", "D") == "A",
@@ -178,9 +189,11 @@ async def score_submission(request: ScoringRequest):
     except HTTPException:
         raise
     except json.JSONDecodeError as e:
-        raise HTTPException(status_code=500, detail=f"採点結果のJSON解析に失敗しました: {str(e)}")
+        logger.error(f"採点結果のJSON解析エラー: {str(e)}")
+        raise HTTPException(status_code=500, detail="採点結果の解析に失敗しました")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"採点処理に失敗しました: {str(e)}")
+        logger.error(f"採点処理エラー: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="採点処理に失敗しました。しばらくしてから再度お試しください。")
 
 
 @router.get("/{submission_id}")
@@ -218,4 +231,5 @@ async def get_scoring_result(submission_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"採点結果の取得に失敗しました: {str(e)}")
+        logger.error(f"採点結果取得エラー: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="採点結果の取得に失敗しました")
