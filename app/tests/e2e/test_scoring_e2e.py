@@ -55,11 +55,13 @@ class TestScoringE2E:
         assert validation["valid"], f"採点結果が不正: {validation['errors']}"
         
         # 4. 高品質回答としての期待値確認
-        assert scoring_data["aggregate_score"] >= 50, \
-            f"高品質回答のスコアが低すぎます: {scoring_data['aggregate_score']}"
+        # AI採点には揺れがあるため、70点以上で許容
+        assert scoring_data["aggregate_score"] >= 70, \
+            f"高品質回答（IPA模範解答レベル）のスコアが低すぎます: {scoring_data['aggregate_score']}"
         
+        # ランクAまたはBであることを確認
         assert scoring_data["final_rank"] in ["A", "B"], \
-            f"高品質回答のランクが低すぎます: {scoring_data['final_rank']}"
+            f"高品質回答（IPA模範解答レベル）はランクAまたはBであるべき: {scoring_data['final_rank']}"
         
         print(f"\n✅ 高品質回答の採点結果:")
         print(f"   スコア: {scoring_data['aggregate_score']}")
