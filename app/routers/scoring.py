@@ -9,6 +9,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Dict, Optional, List
 from datetime import datetime
+from decimal import Decimal
 import json
 import boto3
 from slowapi import Limiter
@@ -117,8 +118,7 @@ async def score_submission(request: Request, scoring_request: ScoringRequest):
         # 回答を取得
         response = submission_table.get_item(
             Key={
-                "PK": f"SUBMISSION#{scoring_request.submission_id}",
-                "SK": "ANSWER"
+                "submission_id": scoring_request.submission_id
             }
         )
         
@@ -165,18 +165,33 @@ async def score_submission(request: Request, scoring_request: ScoringRequest):
             answer_text = answers.get(question, "")
             breakdown["word_count"] = len(answer_text.replace(" ", "").replace("\n", ""))
         
-        # 結果をDynamoDBに保存
-        result_item = {
-            "PK": f"SUBMISSION#{scoring_request.submission_id}",
-            "SK": "SCORING",
-            "submission_id": scoring_request.submission_id,
-            "aggregate_score": scoring_result.get("aggregate_score", 0),
-            "final_rank": scoring_result.get("final_rank", "D"),
-            "passed": scoring_result.get("final_rank", "D") == "A",
-            "question_breakdown": question_breakdown,
-            "scored_at": datetime.utcnow().isoformat() + "Z",
-        }
-        submission_table.put_item(Item=result_item)
+        # Float を Decimal に変換（DynamoDB用）
+        def convert_floats(obj):
+            if isinstance(obj, float):
+                return Decimal(str(obj))
+            elif isinstance(obj, dict):
+                return {k: convert_floats(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [convert_floats(i) for i in obj]
+            return obj
+        
+        breakdown_for_db = convert_floats(question_breakdown)
+        aggregate_score = Decimal(str(scoring_result.get("aggregate_score", 0)))
+        
+        # 結果をDynamoDBの既存レコードに追加保存
+        submission_table.update_item(
+            Key={"submission_id": scoring_request.submission_id},
+            UpdateExpression="SET aggregate_score = :score, final_rank = :rank, passed = :passed, question_breakdown = :breakdown, scored_at = :scored_at, #st = :status",
+            ExpressionAttributeNames={"#st": "status"},
+            ExpressionAttributeValues={
+                ":score": aggregate_score,
+                ":rank": scoring_result.get("final_rank", "D"),
+                ":passed": scoring_result.get("final_rank", "D") == "A",
+                ":breakdown": breakdown_for_db,
+                ":scored_at": datetime.utcnow().isoformat() + "Z",
+                ":status": "scored"
+            }
+        )
         
         return ScoringResponse(
             submission_id=scoring_request.submission_id,
@@ -210,8 +225,7 @@ async def get_scoring_result(submission_id: str):
     try:
         response = submission_table.get_item(
             Key={
-                "PK": f"SUBMISSION#{submission_id}",
-                "SK": "SCORING"
+                "submission_id": submission_id
             }
         )
         
@@ -219,9 +233,13 @@ async def get_scoring_result(submission_id: str):
         if not item:
             raise HTTPException(status_code=404, detail="採点結果が見つかりません")
         
+        # 採点済みかチェック
+        if item.get("status") != "scored":
+            raise HTTPException(status_code=404, detail="採点結果が見つかりません")
+        
         return {
             "submission_id": item.get("submission_id"),
-            "aggregate_score": item.get("aggregate_score"),
+            "aggregate_score": float(item.get("aggregate_score", 0)),
             "final_rank": item.get("final_rank"),
             "passed": item.get("passed"),
             "question_breakdown": item.get("question_breakdown", {}),

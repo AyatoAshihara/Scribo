@@ -71,10 +71,8 @@ async def submit_answer(submission: AnswerSubmission):
         submission_id = str(uuid.uuid4())
         submitted_at = datetime.utcnow().isoformat() + "Z"
         
-        # DynamoDBに保存
+        # DynamoDBに保存（キーはsubmission_idのみ）
         item = {
-            "PK": f"SUBMISSION#{submission_id}",
-            "SK": "ANSWER",
             "submission_id": submission_id,
             "exam_type": submission.exam_type,
             "problem_id": submission.problem_id,
@@ -112,8 +110,7 @@ async def get_answer(submission_id: str):
     try:
         response = submission_table.get_item(
             Key={
-                "PK": f"SUBMISSION#{submission_id}",
-                "SK": "ANSWER"
+                "submission_id": submission_id
             }
         )
         
