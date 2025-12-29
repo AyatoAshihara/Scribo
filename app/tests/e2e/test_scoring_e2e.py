@@ -37,6 +37,8 @@ class TestScoringE2E:
         }
         
         submit_response = client.post("/api/answers", json=submit_payload)
+        print(f"\n[DEBUG] Submit status: {submit_response.status_code}")
+        print(f"[DEBUG] Submit body: {submit_response.text}")
         assert submit_response.status_code == 200
         
         submission_id = submit_response.json()["submission_id"]
@@ -54,14 +56,12 @@ class TestScoringE2E:
         validation = validate_scoring_response(scoring_data)
         assert validation["valid"], f"採点結果が不正: {validation['errors']}"
         
-        # 4. 高品質回答としての期待値確認
-        # AI採点には揺れがあるため、70点以上で許容
-        assert scoring_data["aggregate_score"] >= 70, \
+        # 4. 高品質回答としての期待値確認（temperature=0.0で安定化）
+        assert scoring_data["aggregate_score"] >= 75, \
             f"高品質回答（IPA模範解答レベル）のスコアが低すぎます: {scoring_data['aggregate_score']}"
         
-        # ランクAまたはBであることを確認
-        assert scoring_data["final_rank"] in ["A", "B"], \
-            f"高品質回答（IPA模範解答レベル）はランクAまたはBであるべき: {scoring_data['final_rank']}"
+        assert scoring_data["final_rank"] == "A", \
+            f"高品質回答（IPA模範解答レベル）はランクAであるべき: {scoring_data['final_rank']}"
         
         print(f"\n✅ 高品質回答の採点結果:")
         print(f"   スコア: {scoring_data['aggregate_score']}")

@@ -1,0 +1,124 @@
+openapi: 3.0.3
+info:
+  title: Scribo AI Interview API
+  version: 1.0.0
+  description: API for the AI Design Interview Wizard feature.
+
+paths:
+  /api/interview/sessions/{exam_id}:
+    get:
+      summary: Get or create an interview session
+      parameters:
+        - name: exam_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Current session state and history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterviewSession'
+
+  /api/interview/chat/{exam_id}:
+    post:
+      summary: Send a message and get a streaming response
+      parameters:
+        - name: exam_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+      responses:
+        '200':
+          description: Streaming response (SSE)
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                example: "data: {\"text\": \"Hello\"}\n\n"
+
+  /api/interview/generate/{exam_id}:
+    post:
+      summary: Generate a design proposal from the chat history
+      parameters:
+        - name: exam_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Generated design proposal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DesignProposal'
+
+components:
+  schemas:
+    InterviewSession:
+      type: object
+      properties:
+        user_id:
+          type: string
+        exam_id:
+          type: string
+        history:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+        status:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+
+    ChatMessage:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    DesignProposal:
+      type: object
+      properties:
+        theme:
+          type: string
+        breakdown:
+          type: object
+          properties:
+            ア:
+              type: string
+            イ:
+              type: string
+            ウ:
+              type: string
+        structure:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              title:
+                type: string
+              content:
+                type: string

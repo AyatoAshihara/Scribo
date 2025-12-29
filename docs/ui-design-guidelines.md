@@ -1,77 +1,50 @@
-# Scribo UIデザインガイドライン v2.0
+# Scribo UIデザインガイドライン v3.0 (Material Design 3)
 
-本ドキュメントは、モダンSaaSアプリ（Notion, Linear, Vercel等）のトレンドを参考に、Scriboの視覚的デザインの指針を定める。
+本ドキュメントは、Googleの **Material Design 3 (Material You)** をベースとしたScriboのデザインシステムを定義する。
+「合格のための戦略的ツール」として、信頼感、機能性、そしてユーザーの集中力を高めるデザインを目指す。
 
 ## デザイン原則
 
-### 1. クリーン & ミニマル
-- 不要な装飾を排除し、コンテンツを主役にする
-- 余白を十分に確保し、視覚的な呼吸感を与える
-- 情報の階層を明確にし、認知負荷を最小化する
+### 1. Material You (Personalized & Adaptive)
+- ユーザーの操作に呼応するインタラクション（Ripple Effect, State Layers）。
+- 視認性が高く、アクセシブルなカラーパレット。
+- デバイスサイズに適応するレスポンシブレイアウト。
 
-### 2. 一貫性
-- 全ページで同じデザインパターンを使用
-- コンポーネントの再利用を徹底
-- トランジション・アニメーションを統一
+### 2. Elevation & Depth (階層構造)
+- 影（Shadow）と表面色（Surface Tones）を用いて情報の階層を表現する。
+- 重要なアクション（FAB等）は高いエレベーションで強調する。
 
-### 3. アクセシビリティ
-- コントラスト比 4.5:1 以上を確保
-- フォーカス状態の明示
-- ダークモード対応
+### 3. Focus & Clarity (集中と明瞭さ)
+- 執筆・思考の妨げにならないミニマルなレイアウト。
+- 重要な情報（エラー、合格判定）は明確な色とアイコンで伝える。
 
 ---
 
-## カラーシステム
+## カラーシステム (Material 3 Baseline)
 
-### ブランドカラー
+Material 3のカラーロールに基づき定義する。
 
-| 名称 | Light Mode | Dark Mode | 用途 |
-|------|------------|-----------|------|
-| **Primary** | `#6366f1` (Indigo-500) | `#818cf8` (Indigo-400) | CTA、主要アクセント |
-| **Secondary** | `#8b5cf6` (Violet-500) | `#a78bfa` (Violet-400) | サブアクション |
-| **Accent** | `#06b6d4` (Cyan-500) | `#22d3ee` (Cyan-400) | ハイライト、リンク |
+### Key Colors
 
-### セマンティックカラー
+| Role | Token | Light Mode | Dark Mode | 用途 |
+|------|-------|------------|-----------|------|
+| **Primary** | `primary` | `#6750A4` (Purple) | `#D0BCFF` | 主要アクション、FAB、アクティブ状態 |
+| **On Primary** | `on-primary` | `#FFFFFF` | `#381E72` | Primary上のテキスト・アイコン |
+| **Primary Container** | `primary-container` | `#EADDFF` | `#4F378B` | 選択状態、強調エリア背景 |
+| **Secondary** | `secondary` | `#625B71` | `#CCC2DC` | 補助的アクション、チップ |
+| **Tertiary** | `tertiary` | `#7D5260` | `#EFB8C8` | アクセント、グラフ、強調 |
+| **Error** | `error` | `#B3261E` | `#F2B8B5` | エラー、警告、減点箇所 |
 
-| 名称 | Light Mode | Dark Mode | 用途 |
-|------|------------|-----------|------|
-| **Success** | `#10b981` (Emerald-500) | `#34d399` | 合格、成功 |
-| **Warning** | `#f59e0b` (Amber-500) | `#fbbf24` | 注意、警告 |
-| **Error** | `#ef4444` (Red-500) | `#f87171` | エラー、不合格 |
-| **Info** | `#3b82f6` (Blue-500) | `#60a5fa` | 情報、ヒント |
+### Surface & Background
 
-### 背景・サーフェス
+| Role | Token | Light Mode | Dark Mode | 用途 |
+|------|-------|------------|-----------|------|
+| **Surface** | `base-100` | `#FEF7FF` | `#141218` | カード、シートの背景 |
+| **Surface Variant** | `base-200` | `#E7E0EC` | `#49454F` | 入力フィールド、区切り線 |
+| **Background** | `base-300` | `#FDF8FD` | `#141218` | アプリ全体の背景 |
+| **Outline** | `neutral` | `#79747E` | `#938F99` | ボーダー、非活性要素 |
 
-| 名称 | Light Mode | Dark Mode | 用途 |
-|------|------------|-----------|------|
-| **Background** | `#fafafa` | `#09090b` | ページ全体背景 |
-| **Surface** | `#ffffff` | `#18181b` | カード背景 |
-| **Surface-Alt** | `#f4f4f5` | `#27272a` | 代替背景 |
-| **Border** | `#e4e4e7` | `#3f3f46` | ボーダー |
-| **Border-Light** | `#f4f4f5` | `#27272a` | 薄いボーダー |
-
-### グラデーション
-
-```css
-/* プライマリグラデーション - CTAボタン等 */
-.gradient-primary {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-}
-
-/* ヒーローグラデーション - ヘッダー背景等 */
-.gradient-hero {
-  background: linear-gradient(135deg, 
-    rgba(99, 102, 241, 0.1) 0%, 
-    rgba(139, 92, 246, 0.1) 100%);
-}
-
-/* サーフェスグラデーション - 微細な奥行き */
-.gradient-surface {
-  background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
-}
-```
-
-### DaisyUIカスタムテーマ設定
+### DaisyUI テーマ設定 (Material 3風)
 
 ```javascript
 // tailwind.config.js
@@ -80,24 +53,92 @@ module.exports = {
     themes: [
       {
         scribo: {
-          "primary": "#6366f1",
-          "secondary": "#8b5cf6",
-          "accent": "#06b6d4",
-          "neutral": "#18181b",
-          "base-100": "#ffffff",
-          "base-200": "#f4f4f5",
-          "base-300": "#e4e4e7",
-          "info": "#3b82f6",
+          "primary": "#6750A4",          // M3 Purple 40
+          "primary-content": "#FFFFFF",
+          "secondary": "#625B71",        // M3 Purple Grey 40
+          "accent": "#7D5260",           // M3 Pink 40
+          "neutral": "#79747E",          // Outline color
+          "base-100": "#FEF7FF",         // Surface
+          "base-200": "#E7E0EC",         // Surface Variant
+          "base-300": "#FDF8FD",         // Background
+          "info": "#21005D",             // Primary Dark
           "success": "#10b981",
           "warning": "#f59e0b",
-          "error": "#ef4444",
+          "error": "#B3261E",            // M3 Error 40
+          
+          "--rounded-box": "1rem",       // M3 uses larger border radius
+          "--rounded-btn": "100px",      // Pill shape buttons
+          "--rounded-badge": "1.9rem",
+          "--animation-btn": "0.25s",
+          "--btn-focus-scale": "0.95",
+          "--border-btn": "1px",
+          "--tab-border": "1px",
+          "--tab-radius": "0.5rem",
         },
-        "scribo-dark": {
-          "primary": "#818cf8",
-          "secondary": "#a78bfa",
-          "accent": "#22d3ee",
-          "neutral": "#fafafa",
-          "base-100": "#18181b",
+      }
+    ],
+  },
+}
+```
+
+---
+
+## タイポグラフィ (Roboto / Noto Sans JP)
+
+Material DesignのType Scaleに準拠。
+
+| Scale | Size | Weight | Line Height | 用途 |
+|-------|------|--------|-------------|------|
+| **Display Large** | 57px | Regular | 64px | LPヒーロー、巨大な数字 |
+| **Headline Large** | 32px | Regular | 40px | ページタイトル |
+| **Title Medium** | 16px | Medium | 24px | カードタイトル、サブセクション |
+| **Body Large** | 16px | Regular | 24px | 本文、論文エディタ |
+| **Label Large** | 14px | Medium | 20px | ボタンテキスト |
+
+---
+
+## コンポーネントガイドライン
+
+### 1. カード (Cards)
+- **Elevated Card**: 影付き。ドラッグ可能な要素や、背景から浮き上がらせたいコンテンツに使用。
+  - `class="card bg-base-100 shadow-md rounded-2xl"`
+- **Outlined Card**: 枠線付き。情報のグルーピングに使用。
+  - `class="card border border-neutral/20 rounded-2xl"`
+- **Filled Card**: 色付き背景。強調したい状態や選択状態に使用。
+  - `class="card bg-primary-container/30 rounded-2xl"`
+
+### 2. ボタン (Buttons)
+- **Filled Button (Primary)**: 主要アクション（「採点する」「保存」）。
+  - `class="btn btn-primary rounded-full"`
+- **Outlined Button**: 補助アクション（「キャンセル」「戻る」）。
+  - `class="btn btn-outline border-neutral/50 text-primary rounded-full"`
+- **Text Button**: 控えめなアクション（「詳細を見る」）。
+  - `class="btn btn-ghost text-primary rounded-full"`
+- **FAB (Floating Action Button)**: 画面の主要な作成アクション（「新規モジュール作成」）。
+  - `class="btn btn-primary shadow-xl fixed bottom-6 right-6 rounded-2xl w-14 h-14"`
+
+### 3. ナビゲーション (Navigation)
+- **Navigation Rail**: デスクトップ向け左側固定メニュー。
+- **Navigation Bar**: モバイル向け下部固定メニュー。
+- **Drawer**: モバイル向けサイドメニュー。
+
+### 4. エディタ・入力フォーム
+- **Text Field**:
+  - **Outlined**: デフォルトの入力スタイル。
+    - `class="input input-bordered rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20"`
+  - **Filled**: 背景色あり、下線のみ（または枠なし）。論文エディタ部分など、没入感を重視する場合。
+
+---
+
+## アイコン
+- **Material Symbols (Rounded)** を使用する。
+- Google Fontsから読み込み、`class="material-symbols-rounded"` で使用。
+
+```html
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+<span class="material-symbols-rounded">edit</span>
+```
+
           "base-200": "#27272a",
           "base-300": "#3f3f46",
           "info": "#60a5fa",

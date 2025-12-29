@@ -2,13 +2,31 @@
 
 ## 1. プロジェクト概要
 
-**Scribo** は、情報処理技術者試験（特に高度試験の午後II論述式）の学習・演習を支援するためのWebアプリケーションです。ユーザーは過去問を閲覧し、実際の試験形式に近い環境で論文作成の練習を行うことができます。採点には Amazon Bedrock (Claude 3.5 Sonnet) を用いて、IPA公式の評価基準に沿った高品質な採点をリアルタイムで提供します。
+**Scribo** は、ITストラテジスト試験合格のための**「戦略的執筆トレーニング」プラットフォーム**です。
+単なる模試・採点ツールではなく、「準備（資産化）→設計→執筆」という合格のための正しいプロセスをアプリ体験として提供します。
 
 **本番URL:** http://scribo-alb-760941679.ap-northeast-1.elb.amazonaws.com/
 
 ---
 
-## 2. 技術スタック
+## 2. コンセプト: "The Strategist's Forge"
+
+合格ノウハウに基づき、以下の3つのフェーズで学習を支援します。
+
+1.  **資産化 (Asset Preparation)**:
+    *   「準備モジュール」を作成・管理。
+    *   AIが経験談を「論文用語」にリライトし、合格レベルのネタを蓄積。
+2.  **設計 (Strategic Planning)**:
+    *   いきなり書き始めず、設問分解と章構成（設計図）を作成。
+    *   蓄積したモジュールを設計図にマッピング。
+3.  **執筆・評価 (Execution & Feedback)**:
+    *   設計図を見ながら執筆するスプリットビューエディタ。
+    *   形式不備（行頭句読点など）のリアルタイム検知。
+    *   IPA基準の厳密なAI採点（減点方式）。
+
+---
+
+## 3. 技術スタック
 
 サーバーサイドレンダリング中心のモダンな軽量アーキテクチャを採用しています。
 
@@ -22,15 +40,15 @@
 | boto3 | 1.35.x | AWS SDK |
 | pydantic-settings | 2.6.x | 設定管理 |
 
-### フロントエンド
+### フロントエンド (Material Design 3)
 
 | 技術 | バージョン | 用途 |
 |------|-----------|------|
 | htmx | 2.0.4 | 非同期通信、部分更新 |
 | Alpine.js | 3.14.3 | リアクティブUI、状態管理 |
 | Tailwind CSS | CDN | ユーティリティCSS |
-| DaisyUI | 4.12.14 | UIコンポーネント |
-| canvas-confetti | 1.9.3 | 祝福エフェクト |
+| DaisyUI | 4.12.14 | UIコンポーネント (Materialテーマ) |
+| Material Symbols | Google Fonts | アイコン |
 
 ### インフラ
 
@@ -39,64 +57,64 @@
 | ECS Fargate (Spot) | コンテナホスティング |
 | ALB | ロードバランシング |
 | ECR | コンテナイメージ |
-| DynamoDB | データストア |
+| DynamoDB | データストア (回答、モジュール、設計図) |
 | S3 | 問題本文格納 |
-| Amazon Bedrock | AI採点 |
+| Amazon Bedrock | AI採点・リライト |
 
 ---
 
-## 3. ディレクトリ構造
+## 4. ディレクトリ構造
 
 ```text
 app/
 ├── main.py                 # FastAPIエントリーポイント
 ├── config.py               # 環境変数・設定管理
-├── requirements.txt        # Python依存関係
-├── Dockerfile              # コンテナビルド定義
 ├── routers/                # APIルーター
-│   ├── exams.py            # 試験一覧・詳細取得
+│   ├── exams.py            # 試験一覧・詳細
+│   ├── modules.py          # [New] 準備モジュール管理
+│   ├── designs.py          # [New] 論文設計
 │   ├── answers.py          # 回答保存
 │   └── scoring.py          # AI採点
 ├── templates/              # Jinja2テンプレート
-│   ├── base.html           # 共通レイアウト
+│   ├── base.html           # 共通レイアウト (Material Design)
 │   └── pages/
-│       ├── index.html      # トップページ（試験一覧）
-│       ├── problem.html    # 問題・回答入力
+│       ├── index.html      # ダッシュボード
+│       ├── modules/        # [New] モジュール管理画面
+│       ├── design/         # [New] 設計ウィザード
+│       ├── problem.html    # 執筆エディタ
 │       └── result.html     # 採点結果
 └── static/
     ├── css/style.css       # カスタムスタイル
     └── js/
         ├── app.js          # 共通ユーティリティ
-        ├── timer.js        # 試験タイマー
-        ├── problem.js      # 問題閲覧・回答入力
-        └── result.js       # 採点結果表示
+        ├── editor.js       # [Update] 執筆エディタロジック
+        └── ...
 
 backend/
 ├── lib/
-│   ├── scribo-ecr-stack.ts       # ECRリポジトリ
 │   ├── scribo-fargate-stack.ts   # ECS Fargate構成
-│   └── scribo-github-oidc-stack.ts # GitHub OIDC認証
-└── bin/backend.ts          # CDKエントリーポイント
-
-docs/
-├── ARCHITECTURE.md         # システムアーキテクチャ
-├── API_SPECIFICATION.md    # API仕様書
-├── DEPLOYMENT_GUIDE.md     # デプロイ手順
-├── SCORING_API.md          # 採点API詳細
-└── ux-design-guidelines.md # UXデザインガイドライン
+│   └── ...
 ```
 
 ---
 
-## 4. 主要機能
+## 5. 主要機能ロードマップ
 
-### 4.1 認証
+詳細は `todo.md` を参照してください。
 
-**現在の方式:** 認証なし（パブリックアクセス）
+### Phase 1: 資産化
+- 準備モジュール管理 (CRUD)
+- AIリライティング (平易な表現→論文用語)
 
-今後の拡張でCognito認証を追加予定。
+### Phase 2: 設計
+- 設問分解UI
+- 論文設計ウィザード
 
-### 4.2 試験一覧
+### Phase 3: 執筆・評価
+- スプリットビューエディタ
+- リアルタイムバリデーション
+- 減点方式AI採点
+
 
 - **ページ:** `/` (index.html)
 - **機能:**

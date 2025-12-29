@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block head %}
+<script src="/static/js/modules.js"></script>
+{% endblock %}
+
+{% block content %}
+<div x-data="modulesPage" class="max-w-5xl mx-auto pb-20">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-on-surface">準備モジュール (Assets)</h1>
+            <p class="text-on-surface-variant mt-1">論文の「ネタ」を部品化してストックしましょう</p>
+        </div>
+        <button @click="openCreateModal()" class="btn btn-primary rounded-full px-6 gap-2 shadow-md">
+            <span class="material-symbols-rounded">add</span>
+            新規作成
+        </button>
+    </div>
+
+    <!-- Loading -->
+    <template x-if="loading && modules.length === 0">
+        <div class="flex justify-center py-12">
+            <span class="loading loading-spinner loading-lg text-primary"></span>
+        </div>
+    </template>
+
+    <!-- Empty State -->
+    <template x-if="!loading && modules.length === 0">
+        <div class="text-center py-16 bg-surface-variant/30 rounded-3xl border border-outline/10">
+            <span class="material-symbols-rounded text-6xl text-outline/50 mb-4">inventory_2</span>
+            <h3 class="text-xl font-bold text-on-surface mb-2">モジュールがありません</h3>
+            <p class="text-on-surface-variant mb-6">あなたの経験や知識をモジュールとして登録しましょう</p>
+            <div class="flex justify-center gap-3">
+                <button @click="seedModules()" class="btn btn-ghost rounded-full text-primary">
+                    テンプレートを読み込む
+                </button>
+                <button @click="openCreateModal()" class="btn btn-primary rounded-full">
+                    最初のモジュールを作成
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <!-- Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <template x-for="module in modules" :key="module.module_id">
+            <div class="card bg-base-100 shadow-sm hover:shadow-md transition-shadow border border-base-200 rounded-2xl">
+                <div class="card-body p-5">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="badge border-0 font-medium" :class="getCategoryClass(module.category)" x-text="module.category"></span>
+                        <div class="dropdown dropdown-end">
+                            <label tabindex="0" class="btn btn-circle btn-ghost btn-sm">
+                                <span class="material-symbols-rounded text-on-surface-variant">more_vert</span>
+                            </label>
+                            <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow-lg bg-base-100 rounded-xl w-40 border border-base-200">
+                                <li><a @click="openEditModal(module)" class="gap-2"><span class="material-symbols-rounded text-sm">edit</span>編集</a></li>
+                                <li><a @click="deleteModule(module.module_id)" class="gap-2 text-error"><span class="material-symbols-rounded text-sm">delete</span>削除</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <h3 class="card-title text-lg font-bold text-on-surface mb-2" x-text="module.title"></h3>
+                    <p class="text-on-surface-variant text-sm line-clamp-3 mb-4 whitespace-pre-wrap" x-text="module.content"></p>
+                    
+                    <div class="flex flex-wrap gap-1 mt-auto">
+                        <template x-for="tag in module.tags" :key="tag">
+                            <span class="badge badge-sm badge-outline text-xs text-outline" x-text="tag"></span>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <!-- Modal -->
+    <dialog id="module-modal" class="modal">
+        <div class="modal-box w-11/12 max-w-2xl rounded-3xl bg-base-100 p-0 overflow-hidden">
+            <div class="p-6 border-b border-base-200 bg-surface-container-low">
+                <h3 class="font-bold text-xl text-on-surface" x-text="isEditing ? 'モジュールを編集' : '新規モジュール作成'"></h3>
+            </div>
+            
+            <div class="p-6 space-y-4">
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-medium">タイトル</span>
+                    </label>
+                    <input type="text" x-model="form.title" placeholder="例: A社の基幹システム刷新プロジェクト" class="input input-bordered rounded-xl bg-surface-container-lowest" />
+                </div>
+
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-medium">カテゴリ</span>
+                    </label>
+                    <div class="flex flex-wrap gap-2">
+                        <template x-for="cat in categories" :key="cat">
+                            <button 
+                                type="button"
+                                @click="form.category = cat"
+                                class="btn btn-sm rounded-full"
+                                :class="form.category === cat ? 'btn-primary' : 'btn-ghost bg-surface-variant/50'"
+                                x-text="cat">
+                            </button>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-medium">内容</span>
+                        <button 
+                            @click="rewriteContent()" 
+                            type="button" 
+                            class="btn btn-xs btn-ghost text-primary gap-1"
+                            :disabled="loading">
+                            <span class="material-symbols-rounded text-sm" :class="loading ? 'animate-spin' : ''">auto_awesome</span>
+                            <span x-text="loading ? '生成中...' : 'AIリライト'"></span>
+                        </button>
+                    </label>
+                    <textarea x-model="form.content" class="textarea textarea-bordered h-48 rounded-xl bg-surface-container-lowest text-base leading-relaxed" placeholder="具体的な数値や事実を含めて記述してください..."></textarea>
+                </div>
+
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-medium">タグ (カンマ区切り)</span>
+                    </label>
+                    <input type="text" x-model="form.tags" placeholder="例: 予算超過, 納期遅延, ステークホルダー管理" class="input input-bordered rounded-xl bg-surface-container-lowest" />
+                </div>
+            </div>
+
+            <div class="p-6 border-t border-base-200 bg-surface-container-low flex justify-end gap-2">
+                <button @click="closeModal()" class="btn btn-ghost rounded-full">キャンセル</button>
+                <button @click="saveModule()" class="btn btn-primary rounded-full px-6">保存</button>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button @click="closeModal()">close</button>
+        </form>
+    </dialog>
+</div>
+{% endblock %}

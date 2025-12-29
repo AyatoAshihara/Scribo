@@ -157,7 +157,10 @@ async def get_problem_detail(
 
 
 @router.get("/partial/list", response_class=HTMLResponse)
-async def get_exams_partial(exam_type: str = Query(default="IS")):
+async def get_exams_partial(
+    exam_type: str = Query(default="IS"),
+    mode: str = Query(default="normal", description="表示モード (normal/select_design)")
+):
     """
     試験一覧のHTMLパーシャル（htmx用）
     """
@@ -191,15 +194,40 @@ async def get_exams_partial(exam_type: str = Query(default="IS")):
         for exam in exams:
             # problem_idをURLエンコード
             encoded_problem_id = quote(exam["problem_id"], safe="")
-            html_content += f'''
-            <a href="/exam/{exam["exam_type"]}/{encoded_problem_id}" 
-               class="card-modern card-interactive block">
-                <div class="card-body p-5">
-                    <h3 class="card-title text-base font-semibold text-base-content">{exam["title"]}</h3>
-                    <p class="text-sm text-base-content/70">{exam["year_term"]}</p>
+            
+            if mode == "select_design":
+                # 設計選択モード: シンプルなリスト形式で選択しやすいUI
+                html_content += f'''
+                <a href="/design/{exam["exam_type"]}/{encoded_problem_id}" 
+                   class="flex items-center justify-between p-4 bg-base-100 border border-base-200 rounded-xl hover:bg-primary-container hover:border-primary transition-colors group">
+                    <div>
+                        <div class="font-bold text-base-content group-hover:text-on-primary-container">{exam["title"]}</div>
+                        <div class="text-xs text-base-content/60 group-hover:text-on-primary-container/80">{exam["year_term"]}</div>
+                    </div>
+                    <span class="material-symbols-rounded text-primary group-hover:text-on-primary-container">arrow_forward</span>
+                </a>
+                '''
+            else:
+                # 通常モード: カード形式
+                html_content += f'''
+                <div class="card-modern block">
+                    <div class="card-body p-5">
+                        <h3 class="card-title text-base font-semibold text-base-content">{exam["title"]}</h3>
+                        <p class="text-sm text-base-content/70 mb-4">{exam["year_term"]}</p>
+                        
+                        <div class="flex gap-2 mt-auto">
+                            <a href="/exam/{exam["exam_type"]}/{encoded_problem_id}" class="btn btn-sm btn-outline flex-1">
+                                <span class="material-symbols-rounded text-sm">edit_note</span>
+                                解答
+                            </a>
+                            <a href="/design/{exam["exam_type"]}/{encoded_problem_id}" class="btn btn-sm btn-primary flex-1">
+                                <span class="material-symbols-rounded text-sm">architecture</span>
+                                設計
+                            </a>
+                        </div>
+                    </div>
                 </div>
-            </a>
-            '''
+                '''
         
         if not exams:
             html_content = '<p class="text-center text-base-content/50 py-8">該当する試験がありません</p>'

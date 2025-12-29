@@ -1,84 +1,62 @@
-# Scribo 開発 TODO リスト
+# Scribo 開発ロードマップ (The Strategist's Forge)
 
-このドキュメントは、FastAPI + htmx 構成のScriboアプリケーションの開発タスクを管理します。
+本ドキュメントは、Scriboを「ITストラテジスト合格のための戦略的執筆トレーニングプラットフォーム」へと進化させるための開発タスクを管理します。
 
-## 完了済み ✅
+## Phase 0: 基盤刷新 (Material Design & Architecture)
+
+- [x] **UIデザイン刷新 (Material Design 3)**
+    - [x] `docs/ui-design-guidelines.md` に基づき、Tailwind/DaisyUI設定を更新
+    - [x] `templates/base.html` のレイアウトをMaterial Design (Navigation Rail/Drawer) に変更
+    - [x] フォント (Roboto/Noto Sans JP) とアイコン (Material Symbols) の導入
+    - [x] 既存ページ (`index.html`, `problem.html`, `result.html`) のコンポーネントをMaterial化
+
+- [x] **データモデル拡張**
+    - [x] `modules` テーブル設計 (背景、課題、解決策などのネタ管理)
+    - [x] `designs` テーブル設計 (論文設計図管理)
+    - [x] DynamoDBスキーマ定義の更新 (`backend/lib/scribo-fargate-stack.ts`)
+
+## Phase 1: 資産化フェーズ (Asset Preparation)
+
+- [x] **準備モジュール管理機能**
+    - [x] `GET /modules` - モジュール一覧画面
+    - [x] `POST /api/modules` - モジュール作成・編集API
+    - [x] モジュール作成UI (CRUD) の実装
+    - [x] テンプレートデータの投入 (ビル管理、電力会社などのFew-shot)
+
+- [x] **AIリライティング機能**
+    - [x] `POST /api/modules/rewrite` - AIによる専門用語変換API
+    - [x] 「平易な表現」→「論文用語」変換プロンプトの実装
+    - [x] モジュール編集画面へのAIリライトボタン統合
+
+## Phase 2: 設計フェーズ (Strategic Planning)
+
+- [x] **論文設計ウィザード**
+    - [x] `GET /design/{exam_id}` - 設計画面
+    - [x] 設問分解UI (ドラッグ＆ドロップで設問要素を抽出)
+    - [x] 章構成ビルダー (1.1, 1.2... の骨子作成)
+    - [x] モジュールマッピング (作成済みモジュールを章に割り当て)
+
+- [ ] **設計書プレビュー**
+    - [ ] 設計完了後の全体像確認画面
+    - [ ] 「執筆開始」ボタンの制御 (設計完了までロック)
+
+## Phase 3: 執筆・評価フェーズ (Execution & Feedback)
+
+- [ ] **執筆画面 (Editor) の高度化**
+    - [ ] スプリットビュー実装 (左: 設計図・モジュール / 右: エディタ)
+    - [ ] ドラッグ＆ドロップ引用機能
+    - [ ] リアルタイムバリデーター (行頭句読点、行空け検知)
+    - [ ] ペース配分タイマー (構想/執筆/見直しのフェーズ管理)
+
+- [ ] **採点ロジックの刷新**
+    - [ ] `docs/ITストラテジスト試験 論文対策ノウハウ/9_論文自己評価ガイドライン.md` に基づくプロンプト作成
+    - [ ] 減点方式 (レベル1〜5) の実装
+    - [ ] 採点レポートUIの改善 (合格ランク、減点詳細表示)
+
+## 完了済み (Legacy) ✅
 
 - [x] **FastAPIプロジェクト基盤作成**
-    - [x] `app/main.py` - エントリーポイント
-    - [x] `app/config.py` - 設定管理
-    - [x] `app/requirements.txt` - 依存関係
-    - [x] `app/Dockerfile` - コンテナ定義
-    - [x] `app/docker-compose.yml` - ローカル開発環境
-
-- [x] **APIエンドポイント実装**
-    - [x] `GET /api/exams` - 試験一覧取得
-    - [x] `GET /api/exams/detail` - 問題詳細取得
-    - [x] `POST /api/answers` - 回答保存
-    - [x] `POST /api/scoring` - AI採点リクエスト
-    - [x] `GET /api/scoring/{submission_id}` - 採点結果取得
-
-- [x] **UI画面構築（htmx + Alpine.js）**
-    - [x] `templates/base.html` - 共通レイアウト
-    - [x] `templates/pages/index.html` - 試験一覧ページ
-    - [x] `templates/pages/problem.html` - 問題閲覧・回答ページ
-    - [x] `templates/pages/result.html` - 採点結果ページ
-    - [x] `static/js/timer.js` - タイマーコンポーネント
-    - [x] `static/js/problem.js` - 問題ビューアコンポーネント
-    - [x] `static/js/result.js` - 結果表示コンポーネント
-
+- [x] **基本APIエンドポイント実装**
 - [x] **CDK Fargateインフラ定義**
-    - [x] `backend/lib/scribo-fargate-stack.ts` - ECS Fargate + ALB構成
-    - [x] `backend/bin/scribo-fargate.ts` - CDKアプリ定義
-
 - [x] **GitHub Actions CI/CD構築**
-    - [x] `.github/workflows/deploy.yml` - アプリデプロイ
-    - [x] `.github/workflows/deploy-infra.yml` - インフラデプロイ
 
-- [x] **既存React srcフォルダ削除**
-
-## 優先度: 高 (次のステップ)
-
-- [ ] **ローカル動作確認**
-    - [ ] `docker-compose up` でアプリ起動確認
-    - [ ] DynamoDBテーブルとの接続確認
-    - [ ] 試験一覧・問題詳細の表示確認
-
-- [ ] **初回インフラデプロイ**
-    - [ ] `cdk deploy ScriboFargateStack` 実行
-    - [ ] ECRリポジトリへの初回イメージプッシュ
-    - [ ] ALB経由でのアクセス確認
-
-- [ ] **GitHub Actions設定**
-    - [ ] AWS OIDC連携用IAMロール作成
-    - [ ] `AWS_ROLE_ARN` シークレット設定
-
-## 優先度: 中 (機能拡充)
-
-- [ ] **採点結果のストリーミング表示**
-    - [ ] SSE (Server-Sent Events) でリアルタイム採点進捗を表示
-    - [ ] htmx SSE拡張の導入
-
-- [ ] **学習履歴機能**
-    - [ ] 過去の回答一覧ページ (`/history`)
-    - [ ] 回答詳細・再採点ページ (`/history/{submission_id}`)
-
-- [ ] **UIの改善**
-    - [ ] ダークモード対応
-    - [ ] レスポンシブ対応の強化
-    - [ ] キーボードショートカット
-
-## 優先度: 低 (将来検討)
-
-- [ ] **HTTPS対応**
-    - [ ] ACM証明書の取得
-    - [ ] Route 53でカスタムドメイン設定
-    - [ ] ALBリスナーをHTTPS化
-
-- [ ] **監視・アラート**
-    - [ ] CloudWatch Alarms設定
-    - [ ] エラー通知（SNS/Slack）
-
-- [ ] **パフォーマンス最適化**
-    - [ ] CloudFrontによるキャッシュ
-    - [ ] 静的ファイルのS3配信

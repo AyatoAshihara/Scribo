@@ -1,53 +1,51 @@
 /**
  * Scribo カスタムスタイルシート
- * UI Design Guidelines v2.0 準拠
+ * UI Design Guidelines v3.0 (Material Design 3) 準拠
  */
 
 /* ============================================
    1. Google Fonts
    ============================================ */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap');
+/* Imported in base.html */
 
 /* ============================================
-   2. カスタムカラー (DaisyUI light/dark オーバーライド)
+   2. Material Design 3 Tokens (CSS Variables)
    ============================================ */
-:root,
-[data-theme="light"] {
-    --p: 239 84% 67%;  /* primary: #6366f1 */
-    --pf: 239 84% 58%; /* primary-focus: #4f46e5 */
-    --pc: 0 0% 100%;   /* primary-content: white */
+:root {
+    /* Material 3 Key Colors */
+    --md-sys-color-primary: #6750A4;
+    --md-sys-color-on-primary: #FFFFFF;
+    --md-sys-color-primary-container: #EADDFF;
+    --md-sys-color-on-primary-container: #21005D;
     
-    --s: 258 90% 66%;  /* secondary: #8b5cf6 */
-    --sf: 258 90% 57%; /* secondary-focus: #7c3aed */
-    --sc: 0 0% 100%;   /* secondary-content: white */
+    --md-sys-color-secondary: #625B71;
+    --md-sys-color-on-secondary: #FFFFFF;
+    --md-sys-color-secondary-container: #E8DEF8;
+    --md-sys-color-on-secondary-container: #1D192B;
     
-    --a: 187 86% 42%;  /* accent: #06b6d4 */
-    --af: 187 86% 37%; /* accent-focus: #0891b2 */
-    --ac: 0 0% 100%;   /* accent-content: white */
+    --md-sys-color-tertiary: #7D5260;
+    --md-sys-color-on-tertiary: #FFFFFF;
+    --md-sys-color-tertiary-container: #FFD8E4;
+    --md-sys-color-on-tertiary-container: #31111D;
     
-    --in: 217 91% 60%; /* info: #3b82f6 */
-    --su: 160 84% 39%; /* success: #10b981 */
-    --wa: 38 92% 50%;  /* warning: #f59e0b */
-    --er: 0 84% 60%;   /* error: #ef4444 */
+    --md-sys-color-error: #B3261E;
+    --md-sys-color-on-error: #FFFFFF;
+    --md-sys-color-error-container: #F9DEDC;
+    --md-sys-color-on-error-container: #410E0B;
+    
+    --md-sys-color-background: #FEF7FF;
+    --md-sys-color-on-background: #1D1B20;
+    
+    --md-sys-color-surface: #FEF7FF;
+    --md-sys-color-on-surface: #1D1B20;
+    --md-sys-color-surface-variant: #E7E0EC;
+    --md-sys-color-on-surface-variant: #49454F;
+    
+    --md-sys-color-outline: #79747E;
 }
 
-[data-theme="dark"] {
-    --p: 239 84% 74%;  /* primary: #818cf8 */
-    --pf: 239 84% 67%; /* primary-focus: #6366f1 */
-    --pc: 0 0% 100%;   /* primary-content: white */
-    
-    --s: 258 90% 76%;  /* secondary: #a78bfa */
-    --sf: 258 90% 66%; /* secondary-focus: #8b5cf6 */
-    --sc: 0 0% 100%;   /* secondary-content: white */
-    
-    --a: 187 86% 53%;  /* accent: #22d3ee */
-    --af: 187 86% 42%; /* accent-focus: #06b6d4 */
-    --ac: 0 0% 100%;   /* accent-content: white */
-    
-    --in: 217 91% 70%; /* info: #60a5fa */
-    --su: 160 84% 52%; /* success: #34d399 */
-    --wa: 43 96% 56%;  /* warning: #fbbf24 */
-    --er: 0 91% 71%;   /* error: #f87171 */
+/* DaisyUI overrides are handled in base.html tailwind config */
+
     
     --b1: 240 6% 10%;  /* base-100: #18181b */
     --b2: 240 5% 16%;  /* base-200: #27272a */

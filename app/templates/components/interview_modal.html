@@ -1,0 +1,81 @@
+<dialog id="interview_modal" class="modal" x-data="interviewWizard('{{ exam_type }}', '{{ problem_id }}')">
+  <div class="modal-box w-11/12 max-w-5xl h-[80vh] flex flex-col p-0 bg-base-100">
+    <!-- Header -->
+    <div class="flex justify-between items-center p-4 border-b border-base-200 bg-base-100 sticky top-0 z-10">
+        <h3 class="font-bold text-lg flex items-center gap-2 text-primary">
+            <span class="material-symbols-rounded">smart_toy</span>
+            AI Design Interview
+        </h3>
+        <div class="flex gap-2">
+             <!-- Generate Button -->
+             <button 
+                x-show="canGenerate"
+                @click="generateDesign()"
+                class="btn btn-sm btn-accent gap-2 shadow-sm text-white"
+                :disabled="isLoading">
+                <span x-show="!isLoading" class="material-symbols-rounded">auto_awesome</span>
+                <span x-show="isLoading" class="loading loading-spinner loading-xs"></span>
+                <span class="hidden sm:inline" x-text="isLoading ? 'Generating...' : 'Generate Design'"></span>
+             </button>
+             <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost">✕</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Chat History -->
+    <div class="flex-1 overflow-y-auto p-4 space-y-4 bg-base-100" id="chat-history" x-ref="chatHistory">
+        <template x-for="(msg, index) in messages" :key="index">
+            <div class="chat" :class="msg.role === 'user' ? 'chat-end' : 'chat-start'">
+                <div class="chat-image avatar placeholder">
+                    <div class="rounded-full w-10 flex items-center justify-center shadow-sm" 
+                         :class="msg.role === 'user' ? 'bg-primary text-primary-content' : 'bg-secondary text-secondary-content'">
+                        <span class="material-symbols-rounded" x-text="msg.role === 'user' ? 'person' : 'smart_toy'"></span>
+                    </div>
+                </div>
+                <div class="chat-header opacity-70 text-xs mb-1 flex items-center gap-1">
+                    <span x-text="msg.role === 'user' ? 'You' : 'Scribo AI'"></span>
+                    <time class="text-[10px] opacity-50" x-text="new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})"></time>
+                </div>
+                <div class="chat-bubble shadow-sm" 
+                     :class="msg.role === 'user' ? 'chat-bubble-primary text-primary-content' : 'bg-base-200 text-base-content'"
+                     x-html="formatMessage(msg.content)"></div>
+            </div>
+        </template>
+        
+        <!-- Loading Indicator -->
+        <div x-show="isLoading" class="chat chat-start" style="display: none;">
+             <div class="chat-image avatar placeholder">
+                <div class="rounded-full w-10 flex items-center justify-center bg-secondary text-secondary-content shadow-sm">
+                    <span class="material-symbols-rounded">smart_toy</span>
+                </div>
+            </div>
+             <div class="chat-bubble bg-base-200 text-base-content animate-pulse">
+                <span class="loading loading-dots loading-sm text-secondary"></span>
+             </div>
+        </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="p-4 border-t border-base-200 bg-base-100 sticky bottom-0 z-10">
+        <div class="join w-full shadow-sm">
+            <textarea 
+                x-model="inputMessage" 
+                @keydown.enter.prevent="sendMessage()"
+                class="textarea textarea-bordered join-item w-full resize-none focus:outline-none focus:border-primary" 
+                placeholder="Type your answer here..." 
+                rows="2"
+                :disabled="isLoading"></textarea>
+            <button 
+                @click="sendMessage()" 
+                class="btn btn-primary join-item"
+                :disabled="!inputMessage.trim() || isLoading">
+                <span class="material-symbols-rounded">send</span>
+            </button>
+        </div>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button>close</button>
+  </form>
+</dialog>

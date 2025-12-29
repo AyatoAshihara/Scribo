@@ -29,7 +29,28 @@ export class ScriboFargateStack extends cdk.Stack {
     
     // 既存DynamoDBテーブルをインポート
     const examTable = dynamodb.Table.fromTableName(this, 'ExamTable', 'scribo-ipa');
-    const submissionTable = dynamodb.Table.fromTableName(this, 'SubmissionTable', 'SubmissionTable');
+    const submissionTable = dynamodb.Table.fromTableName(this, 'SubmissionTable', 'BackendStack-SubmissionTable33F44FF8-18BO8KQ7XEI4V');
+    
+    // 新規テーブル作成: 準備モジュール管理
+    const modulesTable = new dynamodb.Table(this, 'ModulesTable', {
+      tableName: 'ModulesTable',
+      partitionKey: { name: 'user_id', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'module_id', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY, // 開発環境用。本番ではRETAIN推奨
+    });
+
+    // 既存テーブルをインポート: 論文設計図管理
+    const designsTable = dynamodb.Table.fromTableName(this, 'DesignsTable', 'DesignsTable');
+
+    // 新規テーブル作成: AIインタビューセッション管理
+    const interviewSessionsTable = new dynamodb.Table(this, 'InterviewSessionsTable', {
+      tableName: 'InterviewSessionsTable',
+      partitionKey: { name: 'user_id', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'exam_id', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
     
     // 既存S3バケットをインポート（問題データ格納）
     const essayBucket = s3.Bucket.fromBucketName(this, 'EssayBucket', 'scribo-essay-evaluator');
@@ -81,6 +102,9 @@ export class ScriboFargateStack extends cdk.Stack {
     // DynamoDB アクセス権限
     examTable.grantReadData(taskDefinition.taskRole);
     submissionTable.grantReadWriteData(taskDefinition.taskRole);
+    modulesTable.grantReadWriteData(taskDefinition.taskRole);
+    designsTable.grantReadWriteData(taskDefinition.taskRole);
+    interviewSessionsTable.grantReadWriteData(taskDefinition.taskRole);
 
     // S3 アクセス権限（問題データ読み取り）
     essayBucket.grantRead(taskDefinition.taskRole);
@@ -109,6 +133,7 @@ export class ScriboFargateStack extends cdk.Stack {
         AWS_REGION: this.region,
         DYNAMODB_EXAM_TABLE: 'scribo-ipa',
         DYNAMODB_SUBMISSION_TABLE: 'SubmissionTable',
+        DYNAMODB_INTERVIEW_SESSION_TABLE: 'InterviewSessionsTable',
         BEDROCK_MODEL_ID: 'anthropic.claude-3-5-sonnet-20240620-v1:0',
       },
       healthCheck: {

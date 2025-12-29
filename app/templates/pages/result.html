@@ -43,8 +43,8 @@
             <p class="text-base-content/70 text-center" x-text="loadingMessage"></p>
             
             <!-- 豆知識 -->
-            <div class="mt-8 p-4 bg-base-100 rounded-2xl border border-base-200 shadow-sm max-w-md">
-                <p class="text-sm text-base-content/60">
+            <div class="mt-8 p-4 bg-surface-variant/30 rounded-2xl border border-outline/10 shadow-sm max-w-md">
+                <p class="text-sm text-on-surface-variant">
                     💡 <span x-text="currentTip"></span>
                 </p>
             </div>
@@ -53,9 +53,10 @@
     
     <!-- エラー状態 -->
     <template x-if="error">
-        <div class="alert-soft-error">
+        <div class="alert bg-error-container text-on-error-container rounded-xl">
+            <span class="material-symbols-rounded">error</span>
             <span x-text="error"></span>
-            <a href="/" class="btn btn-sm rounded-xl">一覧に戻る</a>
+            <a href="/" class="btn btn-sm btn-ghost">一覧に戻る</a>
         </div>
     </template>
     
@@ -64,12 +65,12 @@
         <div class="space-y-6">
             <!-- ヘッダー -->
             <div class="text-center">
-                <h1 class="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">採点結果</h1>
+                <h1 class="text-3xl font-bold mb-2 text-primary">採点結果</h1>
                 <p class="text-base-content/70" x-text="'提出id: ' + submission_id"></p>
             </div>
             
             <!-- 総合スコアカード（段階的開示） -->
-            <div class="card-modern">
+            <div class="card bg-base-100 shadow-md rounded-3xl border border-base-200">
                 <div class="card-body items-center text-center">
                     <!-- ランク表示（アニメーション付き） -->
                     <div 
@@ -87,14 +88,14 @@
                             x-transition:enter-end="opacity-100 scale-100"></span>
                     </div>
                     
-                    <h2 class="card-title mt-4" x-show="showDetails" x-transition>
+                    <h2 class="card-title mt-4 text-on-surface" x-show="showDetails" x-transition>
                         総合スコア: <span x-text="result.aggregate_score.toFixed(1)"></span>点
                     </h2>
                     
                     <!-- 合格/不合格メッセージ -->
                     <template x-if="result.passed">
                         <div class="space-y-2" x-show="showDetails" x-transition>
-                            <div class="badge-soft-success text-base gap-2 px-6 py-3">
+                            <div class="badge bg-success-container text-on-success-container text-base gap-2 px-6 py-3 rounded-full">
                                 🎉 合格ライン達成！おめでとうございます！
                             </div>
                             <p class="text-success font-medium">あなたの努力が実を結びました！</p>

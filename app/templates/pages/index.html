@@ -5,8 +5,8 @@
     
     <!-- ウェルカムモーダル（初回ユーザー向け） -->
     <dialog id="welcome-modal" class="modal" :class="{ 'modal-open': showWelcome }">
-        <div class="modal-box max-w-2xl rounded-2xl">
-            <h3 class="font-bold text-2xl mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">👋 Scriboへようこそ！</h3>
+        <div class="modal-box max-w-2xl rounded-3xl bg-base-100 p-8">
+            <h3 class="font-bold text-2xl mb-4 text-primary">👋 Scriboへようこそ！</h3>
             
             <!-- ステップ表示 -->
             <div class="mb-6">
@@ -26,30 +26,30 @@
             <!-- ステップ1: アプリ紹介 -->
             <template x-if="welcomeStep === 1">
                 <div class="space-y-4" x-transition>
-                    <div class="alert-soft-info">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <span><strong>Scribo</strong>は、IPA午後Ⅱ論述式試験の学習を支援するアプリです。</span>
+                    <div class="bg-primary-container text-on-primary-container p-4 rounded-xl flex gap-3 items-start">
+                        <span class="material-symbols-rounded">info</span>
+                        <span><strong>Scribo</strong>は、ITストラテジスト試験合格のための「戦略的執筆トレーニング」プラットフォームです。</span>
                     </div>
                     <div class="grid gap-3">
-                        <div class="flex items-start gap-3">
-                            <span class="text-2xl">📝</span>
+                        <div class="flex items-start gap-3 p-3 rounded-xl hover:bg-base-200 transition-colors">
+                            <span class="material-symbols-rounded text-primary text-2xl">edit_note</span>
                             <div>
-                                <p class="font-semibold">過去問を使った実践練習</p>
-                                <p class="text-sm text-base-content/70">実際の試験と同じ形式で回答を作成できます</p>
+                                <p class="font-semibold">戦略的執筆</p>
+                                <p class="text-sm text-base-content/70">「準備→設計→執筆」のプロセスで合格力を養成</p>
                             </div>
                         </div>
-                        <div class="flex items-start gap-3">
-                            <span class="text-2xl">🤖</span>
+                        <div class="flex items-start gap-3 p-3 rounded-xl hover:bg-base-200 transition-colors">
+                            <span class="material-symbols-rounded text-primary text-2xl">psychology</span>
                             <div>
-                                <p class="font-semibold">AIによる8観点での評価</p>
-                                <p class="text-sm text-base-content/70">あなたの回答をAIが詳細に分析・採点します</p>
+                                <p class="font-semibold">AI採点 & フィードバック</p>
+                                <p class="text-sm text-base-content/70">IPA基準の減点方式で厳密に評価</p>
                             </div>
                         </div>
-                        <div class="flex items-start gap-3">
-                            <span class="text-2xl">📊</span>
+                        <div class="flex items-start gap-3 p-3 rounded-xl hover:bg-base-200 transition-colors">
+                            <span class="material-symbols-rounded text-primary text-2xl">inventory_2</span>
                             <div>
-                                <p class="font-semibold">具体的な改善アドバイス</p>
-                                <p class="text-sm text-base-content/70">合格に向けた具体的なフィードバックを提供します</p>
+                                <p class="font-semibold">資産化 (Assets)</p>
+                                <p class="text-sm text-base-content/70">自分の経験を「合格できるネタ」として蓄積</p>
                             </div>
                         </div>
                     </div>
@@ -61,35 +61,35 @@
                 <div class="space-y-4" x-transition>
                     <p class="text-base-content/80">3ステップで効率的に学習できます：</p>
                     <div class="space-y-3">
-                        <div class="card bg-primary/10 border-l-4 border-primary rounded-xl">
-                            <div class="card-body py-3">
+                        <div class="card bg-base-200 border-l-4 border-primary rounded-xl">
+                            <div class="card-body py-3 px-4">
                                 <div class="flex items-center gap-3">
-                                    <div class="badge-soft-primary badge-lg px-3 py-2 font-bold">1</div>
+                                    <div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold">1</div>
                                     <div>
-                                        <p class="font-semibold">問題を選ぶ</p>
-                                        <p class="text-sm text-base-content/70">試験区分と年度を選択して問題を開始</p>
+                                        <p class="font-semibold">準備 (Assets)</p>
+                                        <p class="text-sm text-base-content/70">「準備モジュール」を作成し、ネタをストック</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="card bg-secondary/10 border-l-4 border-secondary rounded-xl">
-                            <div class="card-body py-3">
+                        <div class="card bg-base-200 border-l-4 border-secondary rounded-xl">
+                            <div class="card-body py-3 px-4">
                                 <div class="flex items-center gap-3">
-                                    <div class="badge-soft-secondary badge-lg px-3 py-2 font-bold">2</div>
+                                    <div class="w-8 h-8 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold">2</div>
                                     <div>
-                                        <p class="font-semibold">回答を作成</p>
-                                        <p class="text-sm text-base-content/70">120分のタイマーで本番さながらの練習</p>
+                                        <p class="font-semibold">設計 (Design)</p>
+                                        <p class="text-sm text-base-content/70">問題を選び、設問分解と章構成を作成</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="card bg-accent/10 border-l-4 border-accent rounded-xl">
-                            <div class="card-body py-3">
+                        <div class="card bg-base-200 border-l-4 border-tertiary rounded-xl">
+                            <div class="card-body py-3 px-4">
                                 <div class="flex items-center gap-3">
-                                    <div class="badge-soft-accent badge-lg px-3 py-2 font-bold">3</div>
+                                    <div class="w-8 h-8 rounded-full bg-tertiary text-on-tertiary flex items-center justify-center font-bold">3</div>
                                     <div>
-                                        <p class="font-semibold">採点結果を確認</p>
-                                        <p class="text-sm text-base-content/70">AIが8観点で詳細に評価・アドバイス</p>
+                                        <p class="font-semibold">執筆 (Write)</p>
+                                        <p class="text-sm text-base-content/70">設計図を見ながら執筆し、AI採点で確認</p>
                                     </div>
                                 </div>
                             </div>

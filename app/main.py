@@ -15,7 +15,7 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 from config import get_settings
-from routers import exams, answers, scoring
+from routers import exams, answers, scoring, modules, designs, interview
 
 settings = get_settings()
 
@@ -44,10 +44,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data:; "
-            "connect-src 'self';"
+            "connect-src 'self' https://cdn.jsdelivr.net;"
         )
         return response
-
 
 # FastAPIアプリケーション初期化
 app = FastAPI(
@@ -73,6 +72,9 @@ templates = Jinja2Templates(directory="templates")
 app.include_router(exams.router, prefix="/api/exams", tags=["exams"])
 app.include_router(answers.router, prefix="/api/answers", tags=["answers"])
 app.include_router(scoring.router, prefix="/api/scoring", tags=["scoring"])
+app.include_router(modules.router, prefix="/api/modules", tags=["modules"])
+app.include_router(designs.router, prefix="/api/designs", tags=["designs"])
+app.include_router(interview.router, prefix="/api/interview", tags=["interview"])
 
 
 # =============================================================================
@@ -119,6 +121,41 @@ async def result_page(request: Request, submission_id: str):
     )
 
 
+@app.get("/modules", response_class=HTMLResponse)
+async def modules_page(request: Request):
+    """準備モジュール管理ページ"""
+    return templates.TemplateResponse(
+        "pages/modules.html",
+        {"request": request, "title": "準備モジュール (Assets)"}
+    )
+
+
+@app.get("/designs", response_class=HTMLResponse)
+async def designs_list_page(request: Request):
+    """設計図一覧ページ"""
+    return templates.TemplateResponse(
+        "pages/design_list.html",
+        {"request": request, "title": "論文設計一覧"}
+    )
+
+
+@app.get("/design/{exam_type}/{problem_id:path}", response_class=HTMLResponse)
+async def design_page(request: Request, exam_type: str, problem_id: str):
+    """論文設計ウィザードページ"""
+    from urllib.parse import unquote
+    decoded_problem_id = unquote(problem_id)
+    
+    return templates.TemplateResponse(
+        "pages/design_wizard.html",
+        {
+            "request": request,
+            "title": "論文設計",
+            "exam_type": exam_type,
+            "problem_id": decoded_problem_id,
+        }
+    )
+
+
 @app.get("/health")
 async def health_check():
     """ヘルスチェックエンドポイント（ALB用）"""
@@ -127,4 +164,4 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(app, host="127.0.0.1", port=8000)

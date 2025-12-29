@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex flex-col gap-6" x-data="designList()" x-init="init()">
+    <!-- ヘッダー -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-bold text-on-surface">論文設計一覧</h1>
+            <p class="text-on-surface-variant mt-1">作成した論文設計図の管理・編集</p>
+        </div>
+        <button onclick="select_problem_modal.showModal()" class="btn btn-primary rounded-full gap-2">
+            <span class="material-symbols-rounded">add</span>
+            新規作成
+        </button>
+    </div>
+
+    <!-- 問題選択モーダル -->
+    <dialog id="select_problem_modal" class="modal">
+        <div class="modal-box max-w-3xl h-[80vh] flex flex-col p-0 bg-base-100">
+            <!-- モーダルヘッダー -->
+            <div class="p-4 border-b border-base-200 flex justify-between items-center sticky top-0 bg-base-100 z-10">
+                <h3 class="font-bold text-lg">設計する問題を選択</h3>
+                <form method="dialog">
+                    <button class="btn btn-sm btn-circle btn-ghost">✕</button>
+                </form>
+            </div>
+            
+            <!-- モーダルコンテンツ -->
+            <div class="p-6 overflow-y-auto flex-1">
+                <!-- 試験区分タブ -->
+                <div x-data="{ activeTab: 'IS' }" class="mb-6">
+                    <div class="tabs tabs-boxed bg-base-200 p-1 rounded-xl inline-flex">
+                        <button 
+                            @click="activeTab = 'IS'; $refs.examList.setAttribute('hx-get', '/api/exams/partial/list?exam_type=IS&mode=select_design'); htmx.trigger($refs.examList, 'load')"
+                            :class="activeTab === 'IS' ? 'bg-white shadow-sm text-primary' : 'text-base-content/70 hover:text-base-content'"
+                            class="px-4 py-2 rounded-lg text-sm font-medium transition-all">
+                            ITストラテジスト
+                        </button>
+                        <button 
+                            @click="activeTab = 'PM'; $refs.examList.setAttribute('hx-get', '/api/exams/partial/list?exam_type=PM&mode=select_design'); htmx.trigger($refs.examList, 'load')"
+                            :class="activeTab === 'PM' ? 'bg-white shadow-sm text-primary' : 'text-base-content/70 hover:text-base-content'"
+                            class="px-4 py-2 rounded-lg text-sm font-medium transition-all">
+                            プロジェクトマネージャ
+                        </button>
+                        <button 
+                            @click="activeTab = 'SA'; $refs.examList.setAttribute('hx-get', '/api/exams/partial/list?exam_type=SA&mode=select_design'); htmx.trigger($refs.examList, 'load')"
+                            :class="activeTab === 'SA' ? 'bg-white shadow-sm text-primary' : 'text-base-content/70 hover:text-base-content'"
+                            class="px-4 py-2 rounded-lg text-sm font-medium transition-all">
+                            システムアーキテクト
+                        </button>
+                    </div>
+                    
+                    <!-- 試験リスト -->
+                    <div 
+                        x-ref="examList"
+                        class="flex flex-col gap-3 mt-6"
+                        hx-get="/api/exams/partial/list?exam_type=IS&mode=select_design"
+                        hx-trigger="load"
+                        hx-indicator="#modal-loading">
+                        <!-- htmxで読み込まれる -->
+                    </div>
+                    
+                    <!-- ローディング -->
+                    <div id="modal-loading" class="htmx-indicator flex justify-center py-8">
+                        <span class="loading loading-spinner loading-md text-primary"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
+
+    <!-- ローディング -->
+    <template x-if="loading">
+        <div class="flex justify-center py-12">
+            <span class="loading loading-spinner loading-lg text-primary"></span>
+        </div>
+    </template>
+
+    <!-- エラー -->
+    <template x-if="error">
+        <div class="alert bg-error-container text-on-error-container rounded-xl">
+            <span class="material-symbols-rounded">error</span>
+            <span x-text="error"></span>
+        </div>
+    </template>
+
+    <!-- リスト -->
+    <template x-if="!loading && !error">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <template x-for="design in designs" :key="design.exam_id">
+                <div class="card bg-base-100 shadow-sm border border-base-200 hover:shadow-md transition-shadow">
+                    <div class="card-body">
+                        <div class="flex justify-between items-start">
+                            <h2 class="card-title text-lg" x-text="design.exam_id"></h2>
+                            <div class="badge badge-secondary badge-outline text-xs">設計中</div>
+                        </div>
+                        <p class="text-sm text-base-content/70 line-clamp-2" x-text="design.theme || 'テーマ未設定'"></p>
+                        
+                        <div class="mt-4 flex justify-between items-center text-xs text-base-content/60">
+                            <span x-text="'更新: ' + formatDate(design.updated_at)"></span>
+                        </div>
+                        
+                        <div class="card-actions justify-end mt-4">
+                            <a :href="'/design/st/' + design.exam_id" class="btn btn-sm btn-primary btn-outline rounded-full">
+                                <span class="material-symbols-rounded text-sm">edit</span>
+                                編集
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </template>
+            
+            <!-- データなし -->
+            <div x-show="designs.length === 0" class="col-span-full text-center py-12 bg-base-100 rounded-2xl border border-dashed border-base-300">
+                <span class="material-symbols-rounded text-4xl text-base-content/20 mb-2">architecture</span>
+                <p class="text-base-content/60">まだ設計図がありません</p>
+                <a href="/" class="btn btn-sm btn-ghost mt-2 text-primary">問題一覧から作成する</a>
+            </div>
+        </div>
+    </template>
+</div>
+
+<script>
+function designList() {
+    return {
+        loading: true,
+        error: null,
+        designs: [],
+        
+        async init() {
+            try {
+                const response = await fetch('/api/designs/');
+                if (!response.ok) throw new Error('設計図一覧の取得に失敗しました');
+                this.designs = await response.json();
+            } catch (e) {
+                this.error = e.message;
+            } finally {
+                this.loading = false;
+            }
+        },
+        
+        formatDate(dateStr) {
+            if (!dateStr) return '-';
+            return new Date(dateStr).toLocaleString('ja-JP');
+        }
+    }
+}
+</script>
+{% endblock %}

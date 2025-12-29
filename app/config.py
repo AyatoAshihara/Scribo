@@ -15,7 +15,10 @@ class Settings(BaseSettings):
     
     # DynamoDB テーブル名
     dynamodb_exam_table: str = "scribo-ipa"
-    dynamodb_submission_table: str = "SubmissionTable"
+    dynamodb_submission_table: str = "BackendStack-SubmissionTable33F44FF8-18BO8KQ7XEI4V"
+    dynamodb_modules_table: str = "ModulesTable"
+    dynamodb_designs_table: str = "DesignsTable"
+    dynamodb_interview_session_table: str = "InterviewSessionsTable"
     
     # Bedrock モデル設定
     bedrock_model_id: str = "anthropic.claude-3-5-sonnet-20240620-v1:0"

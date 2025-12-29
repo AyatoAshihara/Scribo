@@ -23,6 +23,15 @@ export class BackendStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY, // For dev/test, NOT for production
     });
 
+    // Designs Table
+    const designsTable = new dynamodb.Table(this, 'DesignsTable', {
+      tableName: 'DesignsTable',
+      partitionKey: { name: 'user_id', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'exam_id', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
     // 2. Lambda Functions
     const scoringFunction = new nodejs.NodejsFunction(this, 'ScoringFunction', {
       runtime: lambda.Runtime.NODEJS_20_X,

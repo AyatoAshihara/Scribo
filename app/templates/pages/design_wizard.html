@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block head %}
+<script src="/static/js/design_wizard.js"></script>
+<script src="/static/js/interview.js"></script>
+{% endblock %}
+
+{% block content %}
+{% include "components/interview_modal.html" %}
+<div 
+    x-data="designWizard('{{ exam_type }}', '{{ problem_id }}')" 
+    class="max-w-6xl mx-auto pb-20 h-[calc(100vh-8rem)] flex flex-col">
+    
+    <!-- Header / Stepper -->
+    <div class="flex justify-between items-center mb-6 flex-none">
+        <div>
+            <h1 class="text-2xl font-bold text-on-surface">論文設計ウィザード</h1>
+            <p class="text-sm text-on-surface-variant" x-text="problem ? problem.title : '読み込み中...'">Loading...</p>
+        </div>
+        
+        <ul class="steps steps-horizontal">
+            <li class="step" :class="step >= 1 ? 'step-primary' : ''">設問分解</li>
+            <li class="step" :class="step >= 2 ? 'step-primary' : ''">章構成</li>
+            <li class="step" :class="step >= 3 ? 'step-primary' : ''">モジュール割当</li>
+        </ul>
+        
+        <div class="flex gap-2">
+            <button @click="$dispatch('open-interview-modal', { examId: problem_id })" class="btn btn-secondary gap-2 rounded-full text-white shadow-md hover:shadow-lg transition-all">
+                <span class="material-symbols-rounded">smart_toy</span>
+                AIインタビュー
+            </button>
+            
+            <button @click="saveDesign()" class="btn btn-ghost gap-2" :disabled="saving">
+                <span class="material-symbols-rounded" :class="saving ? 'animate-spin' : ''">save</span>
+                <span x-text="saving ? '保存中...' : '保存'"></span>
+            </button>
+            <a href="/exam/{{ exam_type }}/{{ problem_id }}" class="btn btn-primary rounded-full">
+                <span class="material-symbols-rounded">edit_note</span>
+                執筆へ進む
+            </a>
+        </div>
+    </div>
+
+    <!-- Step 1: 設問分解 -->
+    <div x-show="step === 1" class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-0" x-transition>
+        <!-- 左: 問題文 -->
+        <div class="card bg-base-100 border border-base-200 shadow-sm flex flex-col h-full overflow-hidden">
+            <div class="card-body p-0 flex flex-col h-full">
+                <div class="p-4 border-b border-base-200 bg-surface-container-low font-bold text-on-surface">
+                    問題文
+                </div>
+                <div class="flex-1 overflow-y-auto p-6 prose prose-sm max-w-none" x-html="formatProblemContent(problem?.problem_content)"></div>
+            </div>
+        </div>
+        
+        <!-- 右: 分解フォーム -->
+        <div class="card bg-base-100 border border-base-200 shadow-sm flex flex-col h-full overflow-hidden">
+            <div class="card-body p-0 flex flex-col h-full">
+                <div class="p-4 border-b border-base-200 bg-surface-container-low font-bold text-on-surface">
+                    設問の要求事項を整理
+                </div>
+                <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                    <div class="form-control">
+                        <label class="label font-bold text-primary">論文のテーマ（骨子）</label>
+                        <textarea x-model="design.theme" class="textarea textarea-bordered h-24" placeholder="誰の、どのような課題を、どうやって解決し、どうなったか"></textarea>
+                    </div>
+                    
+                    <div class="divider">設問ごとの要求</div>
+                    
+                    <div class="form-control">
+                        <label class="label font-bold">設問ア（背景・課題）</label>
+                        <textarea x-model="design.breakdown['ア']" class="textarea textarea-bordered h-32" placeholder="事業概要、業務プロセス、抱えている課題..."></textarea>
+                    </div>
+                    <div class="form-control">
+                        <label class="label font-bold">設問イ（解決策）</label>
+                        <textarea x-model="design.breakdown['イ']" class="textarea textarea-bordered h-32" placeholder="導入した技術、工夫した点、代替案との比較..."></textarea>
+                    </div>
+                    <div class="form-control">
+                        <label class="label font-bold">設問ウ（評価・改善）</label>
+                        <textarea x-model="design.breakdown['ウ']" class="textarea textarea-bordered h-32" placeholder="定量的効果、残された課題、今後の展望..."></textarea>
+                    </div>
+                </div>
+                <div class="p-4 border-t border-base-200 bg-surface-container-low flex justify-end">
+                    <button @click="nextStep()" class="btn btn-primary rounded-full px-8">次へ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: 章構成 -->
+    <div x-show="step === 2" class="flex-1 flex flex-col min-h-0" x-transition>
+        <div class="card bg-base-100 border border-base-200 shadow-sm flex-1 overflow-hidden flex flex-col">
+            <div class="p-4 border-b border-base-200 bg-surface-container-low flex justify-between items-center">
+                <span class="font-bold text-on-surface">章立ての作成</span>
+                <button @click="addChapter()" class="btn btn-sm btn-ghost gap-2">
+                    <span class="material-symbols-rounded">add</span>
+                    章を追加
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 space-y-4">
+                <template x-for="(chapter, index) in design.structure" :key="chapter.id">
+                    <div class="collapse collapse-arrow bg-base-200 border border-base-300">
+                        <input type="radio" name="chapter-accordion" checked="checked" /> 
+                        <div class="collapse-title text-lg font-medium flex items-center gap-4 pr-12">
+                            <span class="badge badge-primary" x-text="index + 1"></span>
+                            <input type="text" x-model="chapter.title" class="input input-ghost w-full font-bold" placeholder="章のタイトル">
+                            <button @click.stop="removeChapter(index)" class="btn btn-sm btn-circle btn-ghost text-error z-10">
+                                <span class="material-symbols-rounded">delete</span>
+                            </button>
+                        </div>
+                        <div class="collapse-content bg-base-100">
+                            <div class="pt-4">
+                                <textarea x-model="chapter.content" class="textarea textarea-bordered w-full h-32" placeholder="この章で書く内容のメモ..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            <div class="p-4 border-t border-base-200 bg-surface-container-low flex justify-between">
+                <button @click="prevStep()" class="btn btn-ghost rounded-full px-8">戻る</button>
+                <button @click="nextStep()" class="btn btn-primary rounded-full px-8">次へ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 3: モジュール割当 -->
+    <div x-show="step === 3" class="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-0" x-transition>
+        <!-- 左: モジュール一覧 -->
+        <div class="lg:col-span-1 card bg-base-100 border border-base-200 shadow-sm flex flex-col h-full overflow-hidden">
+            <div class="p-4 border-b border-base-200 bg-surface-container-low font-bold text-on-surface">
+                利用可能なモジュール
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 space-y-3">
+                <template x-for="module in modules" :key="module.module_id">
+                    <div class="card bg-base-200 border border-base-300 compact cursor-grab active:cursor-grabbing">
+                        <div class="card-body p-3">
+                            <div class="flex justify-between items-start">
+                                <span class="badge badge-xs" x-text="module.category"></span>
+                            </div>
+                            <h4 class="font-bold text-sm mt-1" x-text="module.title"></h4>
+                            <p class="text-xs text-base-content/70 line-clamp-2" x-text="module.content"></p>
+                        </div>
+                    </div>
+                </template>
+                <div x-show="modules.length === 0" class="text-center py-8 text-base-content/50">
+                    モジュールがありません。<br>
+                    <a href="/modules" class="link link-primary">資産化ページ</a>で作成してください。
+                </div>
+            </div>
+        </div>
+
+        <!-- 右: 章ごとの割当 -->
+        <div class="lg:col-span-2 card bg-base-100 border border-base-200 shadow-sm flex flex-col h-full overflow-hidden">
+            <div class="p-4 border-b border-base-200 bg-surface-container-low font-bold text-on-surface">
+                章への割り当て
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                <template x-for="(chapter, index) in design.structure" :key="chapter.id">
+                    <div class="border border-base-300 rounded-xl p-4 bg-base-50">
+                        <h3 class="font-bold text-lg mb-2">
+                            <span class="text-primary mr-2" x-text="'第' + (index + 1) + '章'"></span>
+                            <span x-text="chapter.title"></span>
+                        </h3>
+                        
+                        <!-- 割り当てられたモジュール -->
+                        <div class="flex flex-wrap gap-2 mb-4 min-h-[3rem] p-2 bg-base-100 rounded-lg border border-dashed border-base-300">
+                            <template x-for="moduleId in design.module_map[chapter.id] || []" :key="moduleId">
+                                <div class="badge badge-lg gap-2 py-4 h-auto items-start text-left">
+                                    <span x-text="getModuleById(moduleId)?.title || 'Unknown'"></span>
+                                    <button @click="toggleModule(chapter.id, moduleId)" class="btn btn-xs btn-circle btn-ghost">
+                                        <span class="material-symbols-rounded text-xs">close</span>
+                                    </button>
+                                </div>
+                            </template>
+                            <div x-show="!design.module_map[chapter.id]?.length" class="w-full text-center text-xs text-base-content/40 py-2">
+                                下のリストからモジュールを選択して追加
+                            </div>
+                        </div>
+
+                        <!-- 追加用リスト（簡易的な選択UI） -->
+                        <div class="dropdown">
+                            <label tabindex="0" class="btn btn-sm btn-outline btn-primary gap-2 rounded-full">
+                                <span class="material-symbols-rounded">add</span>
+                                モジュールを追加
+                            </label>
+                            <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-64 max-h-64 overflow-y-auto flex-nowrap">
+                                <template x-for="module in modules" :key="module.module_id">
+                                    <li>
+                                        <a @click="toggleModule(chapter.id, module.module_id)" 
+                                           :class="isModuleSelected(chapter.id, module.module_id) ? 'active' : ''">
+                                            <span class="text-xs badge badge-ghost" x-text="module.category"></span>
+                                            <span class="truncate" x-text="module.title"></span>
+                                        </a>
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            <div class="p-4 border-t border-base-200 bg-surface-container-low flex justify-between">
+                <button @click="prevStep()" class="btn btn-ghost rounded-full px-8">戻る</button>
+                <a href="/exam/{{ exam_type }}/{{ problem_id }}" class="btn btn-primary rounded-full px-8">
+                    設計完了・執筆へ
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interview Modal -->
+    {% include "components/interview_modal.html" %}
+</div>
+{% endblock %}
