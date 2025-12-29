@@ -111,7 +111,7 @@ export class ScriboFargateStack extends cdk.Stack {
 
     // Bedrock アクセス権限
     taskDefinition.taskRole.addToPrincipalPolicy(new iam.PolicyStatement({
-      actions: ['bedrock:InvokeModel'],
+      actions: ['bedrock:InvokeModel', 'bedrock:InvokeModelWithResponseStream'],
       resources: ['*'],
     }));
 
