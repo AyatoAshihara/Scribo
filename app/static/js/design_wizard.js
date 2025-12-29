@@ -5,7 +5,7 @@ document.addEventListener('alpine:init', () => {
         saving: false,
         problem: null,
         modules: [],
-        problemId: problemId, // Expose problemId to the template scope
+        problem_id: problemId, // Expose problemId to the template scope
         design: {
             theme: '',
             breakdown: {
